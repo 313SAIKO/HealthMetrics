@@ -22,8 +22,7 @@ interface HealthFormProps {
   ) => void;
 }
 
-const inputClassName =
-  "mt-2 w-full rounded-xl border bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-4";
+const inputClassName = "hm-input";
 
 export function HealthForm({
   errors,
@@ -64,14 +63,9 @@ export function HealthForm({
 
   return (
     <form ref={formRef} className="w-full" noValidate onSubmit={handleSubmit}>
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-600">
-          {t.form.eyebrow}
-        </p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-          {t.form.title}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-slate-500">
+      <div className="mb-6">
+        <h2 className="hm-section-heading">{t.form.title}</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
           {t.form.description}
         </p>
       </div>
@@ -87,9 +81,9 @@ export function HealthForm({
 
               return (
                 <label
-                  className={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-emerald-700 cursor-pointer rounded-xl border px-4 py-3 text-center text-sm font-semibold transition ${
+                  className={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-emerald-700 cursor-pointer rounded-lg border px-4 py-3 text-center text-sm font-semibold transition ${
                     isSelected
-                      ? "border-emerald-600 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-600/20"
+                      ? "border-emerald-700 bg-emerald-50 text-emerald-900"
                       : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300"
                   }`}
                   key={option.value}
@@ -122,6 +116,9 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="age"
+            name="age"
+            autoComplete="off"
+            inputMode="numeric"
             min={PROFILE_LIMITS.age.min}
             max={PROFILE_LIMITS.age.max}
             step={PROFILE_LIMITS.age.step}
@@ -134,7 +131,7 @@ export function HealthForm({
             type="number"
             value={profile.age}
           />
-          <p id="age-hint" className="mt-2 text-xs text-slate-600">
+          <p id="age-hint" className="mt-2 text-sm text-slate-600">
             {t.form.ageHint}
           </p>
           {errors.age && (
@@ -153,7 +150,7 @@ export function HealthForm({
             htmlFor="weight"
           >
             {t.form.weight}{" "}
-            <span className="font-normal text-slate-400">(kg)</span>
+            <span className="font-normal text-slate-600">(kg)</span>
           </label>
           <input
             aria-describedby={
@@ -166,6 +163,9 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="weight"
+            name="weight"
+            autoComplete="off"
+            inputMode="decimal"
             min={PROFILE_LIMITS.weight.min}
             max={PROFILE_LIMITS.weight.max}
             onChange={(event) =>
@@ -178,7 +178,7 @@ export function HealthForm({
             type="number"
             value={profile.weight}
           />
-          <p id="weight-hint" className="mt-2 text-xs text-slate-600">
+          <p id="weight-hint" className="mt-2 text-sm text-slate-600">
             {t.form.weightHint}
           </p>
           {errors.weight && (
@@ -197,7 +197,7 @@ export function HealthForm({
             htmlFor="height"
           >
             {t.form.height}{" "}
-            <span className="font-normal text-slate-400">(cm)</span>
+            <span className="font-normal text-slate-600">(cm)</span>
           </label>
           <input
             aria-describedby={
@@ -210,6 +210,9 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="height"
+            name="height"
+            autoComplete="off"
+            inputMode="decimal"
             min={PROFILE_LIMITS.height.min}
             max={PROFILE_LIMITS.height.max}
             onChange={(event) =>
@@ -222,7 +225,7 @@ export function HealthForm({
             type="number"
             value={profile.height}
           />
-          <p id="height-hint" className="mt-2 text-xs text-slate-600">
+          <p id="height-hint" className="mt-2 text-sm text-slate-600">
             {t.form.heightHint}
           </p>
           {errors.height && (
@@ -253,6 +256,7 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="activity"
+            name="activityMultiplier"
             onChange={(event) =>
               onProfileChange("activityMultiplier", Number(event.target.value))
             }
@@ -278,10 +282,7 @@ export function HealthForm({
       <p className="mt-6 text-sm leading-6 text-slate-600">
         {t.form.eligibility}
       </p>
-      <button
-        className="mt-8 w-full rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 active:scale-[0.99]"
-        type="submit"
-      >
+      <button className="hm-button mt-6 w-full" type="submit">
         {t.form.calculate}
       </button>
     </form>

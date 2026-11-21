@@ -9,6 +9,7 @@ import {
   validMeasurementDate,
 } from "../../utils/workspace-translations";
 import { ApiError, apiErrorText, apiRequest } from "../account/client";
+import { openAccountPanel } from "../account/AccountPanel";
 
 interface SaveAssessmentProps {
   language: Language;
@@ -20,7 +21,7 @@ export function SaveAssessment(props: SaveAssessmentProps) {
   const account = useAccount();
   return (
     <SaveAssessmentContent
-      key={`${account.user?.id ?? "signed-out"}:${account.loading}:${JSON.stringify(props.profile)}`}
+      key={`${account.user?.id ?? "signed-out"}:${JSON.stringify(props.profile)}`}
       {...props}
       account={account}
     />
@@ -30,7 +31,6 @@ export function SaveAssessment(props: SaveAssessmentProps) {
 function SaveAssessmentContent({
   language,
   profile,
-  result,
   account,
 }: SaveAssessmentProps & { account: ReturnType<typeof useAccount> }) {
   const t = getWorkspaceTranslations(language);
@@ -81,19 +81,12 @@ function SaveAssessmentContent({
   return (
     <section
       aria-labelledby={`${id}-heading`}
-      className="mt-6 rounded-2xl border border-emerald-200 bg-white p-5 sm:p-6"
+      className="hm-surface p-5 sm:p-6"
     >
-      <h2 id={`${id}-heading`} className="text-xl font-bold text-slate-950">
+      <h2 id={`${id}-heading`} className="hm-section-heading">
         {t.saveTitle}
       </h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">{t.saveHelp}</p>
-      <p className="mt-3 text-sm font-semibold text-emerald-800">
-        {t.estimatedEnergy}:{" "}
-        {new Intl.NumberFormat(language === "th" ? "th-TH" : "en-US", {
-          maximumFractionDigits: 1,
-        }).format(result.tdee)}{" "}
-        kcal/day
-      </p>
       {loading ? (
         <p className="mt-4 text-sm text-slate-600">{t.loadingSession}</p>
       ) : !user ? (
@@ -110,6 +103,7 @@ function SaveAssessmentContent({
           )}
           <a
             href="#account"
+            onClick={() => openAccountPanel()}
             className="mt-3 inline-block font-bold text-emerald-800 underline underline-offset-4"
           >
             {t.signIn}
@@ -137,10 +131,15 @@ function SaveAssessmentContent({
                 setSaved(false);
               }}
               required
+              autoComplete="off"
+              aria-invalid={error === "TITLE_INVALID"}
+              aria-describedby={
+                error === "TITLE_INVALID" ? `${id}-error` : undefined
+              }
               maxLength={120}
-              placeholder={t.titlePlaceholder}
+              placeholder={t.titlePlaceholder + "…"}
               disabled={pending}
-              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+              className="hm-input mt-2"
             />
           </label>
           <label
@@ -153,6 +152,11 @@ function SaveAssessmentContent({
               name="measuredAt"
               data-testid="save-date"
               type="date"
+              autoComplete="off"
+              aria-invalid={error === "DATE_INVALID"}
+              aria-describedby={
+                error === "DATE_INVALID" ? `${id}-error` : undefined
+              }
               value={date}
               onChange={(event) => {
                 setDate(event.target.value);
@@ -161,21 +165,25 @@ function SaveAssessmentContent({
               max={todayLocal()}
               required
               disabled={pending}
-              className="mt-1 w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+              className="hm-input mt-2"
             />
           </label>
           <button
             data-testid="save-assessment-submit"
             type="submit"
             disabled={pending || saved}
-            className="rounded-xl bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-60 sm:col-span-2"
+            className="hm-button sm:col-span-2 sm:justify-self-start"
           >
             {pending ? t.working : t.save}
           </button>
         </form>
       )}
       {error !== null && (
-        <p role="alert" className="mt-4 text-sm font-medium text-rose-800">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="mt-4 text-sm font-medium text-rose-800"
+        >
           {error === "TITLE_INVALID"
             ? t.titleError
             : error === "DATE_INVALID"
@@ -184,10 +192,7 @@ function SaveAssessmentContent({
         </p>
       )}
       {saved && (
-        <p
-          role="status"
-          className="mt-4 text-sm font-semibold text-emerald-800"
-        >
+        <p role="status" className="mt-4 text-sm font-medium text-emerald-900">
           {t.saved}
         </p>
       )}

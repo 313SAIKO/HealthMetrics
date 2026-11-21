@@ -1,7 +1,28 @@
-import { afterEach, it, expect } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { afterEach, beforeEach, it, expect, vi } from "vitest";
+import type { ReactElement } from "react";
+import { AccountProvider } from "../src/components/account/AccountProvider";
+import {
+  render as renderUI,
+  screen,
+  fireEvent,
+  cleanup,
+  within,
+} from "@testing-library/react";
 import HomePage from "../src/components/health/HealthCalculator";
-afterEach(cleanup);
+import { getTranslations } from "../src/utils/translations";
+function render(ui: ReactElement) {
+  return renderUI(<AccountProvider>{ui}</AccountProvider>);
+}
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json(null)),
+  );
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 it("clears stale results, retains empty input, localizes errors and document language", () => {
   render(<HomePage />);
   fireEvent.click(screen.getByRole("button", { name: "คำนวณผลลัพธ์" }));
@@ -31,7 +52,10 @@ it("rejects children and withholds low-calorie plans", () => {
   fireEvent.click(screen.getByRole("button", { name: "คำนวณผลลัพธ์" }));
   expect(screen.getAllByText("ไม่รองรับส่วนสูงนี้").length).toBe(4);
   fireEvent.click(screen.getByRole("button", { name: "ลดน้ำหนัก" }));
-  expect(screen.getByRole("status").textContent).toContain("1,500");
+  const results = screen.getByRole("region", {
+    name: getTranslations("th").results.title,
+  });
+  expect(within(results).getByRole("status").textContent).toContain("1,500");
 });
 
 it("keeps focus while correcting multiple invalid fields and refocuses only on submit", () => {

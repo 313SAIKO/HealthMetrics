@@ -9,11 +9,12 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit --incremental false",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run verify:build",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run verify:build && npm run verify:skills",
     "test:e2e": "playwright test",
     "setup": "node scripts/setup.mjs && npm run db:migrate",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
-    "verify:build": "node scripts/verify-build.mjs"
+    "verify:build": "node scripts/verify-build.mjs",
+    "verify:skills": "node scripts/verify-skills.mjs"
   },
   "dependencies": {
     "better-auth": "^1.7.27",

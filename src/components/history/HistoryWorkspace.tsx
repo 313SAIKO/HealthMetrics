@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import type { Language } from "../../types";
 import type {
   Assessment,
@@ -12,14 +13,13 @@ import {
   formatMeasurementDate,
   getWorkspaceTranslations,
 } from "../../utils/workspace-translations";
-import { AccountPanel } from "../account/AccountPanel";
+import { AccountPanel, openAccountPanel } from "../account/AccountPanel";
 import { ApiError, apiErrorText, apiRequest } from "../account/client";
 import { ResultCard } from "../health/ResultCard";
 import { AssessmentComparison } from "./AssessmentComparison";
 import { AssessmentEditor } from "./AssessmentEditor";
 
-const actionStyle =
-  "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:border-emerald-600 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-50";
+const actionStyle = "hm-button-secondary";
 
 export function HistoryWorkspace({
   initialLanguage,
@@ -27,7 +27,91 @@ export function HistoryWorkspace({
   initialLanguage: Language;
 }) {
   const [language, setLanguage] = useState(initialLanguage);
+  const account = useAccount();
   const t = getWorkspaceTranslations(language);
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  function changeLanguage(next: Language) {
+    setLanguage(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", url);
+  }
+  return (
+    <main lang={language} className="hm-page">
+      <div className="hm-shell pb-12">
+        <a href="#history-content" className="hm-skip-link">
+          {language === "th" ? "ข้ามไปประวัติ" : "Skip to history"}
+        </a>
+        <header className="hm-app-header">
+          <Link href={"/?lang=" + language} className="hm-brand" translate="no">
+            <span className="hm-brand-mark" aria-hidden="true">
+              H+
+            </span>
+            HealthMetrics
+          </Link>
+          <nav
+            className="hm-nav"
+            aria-label={language === "th" ? "เมนูหลัก" : "Main navigation"}
+          >
+            <Link href={"/?lang=" + language}>
+              {language === "th" ? "เครื่องคำนวณ" : "Calculator"}
+            </Link>
+            <Link href={"/history?lang=" + language} aria-current="page">
+              {language === "th" ? "ประวัติ" : "History"}
+            </Link>
+          </nav>
+          <div
+            role="group"
+            aria-label={language === "th" ? "เลือกภาษา" : "Language selector"}
+            className="hm-lang"
+          >
+            {(["en", "th"] as const).map((locale) => (
+              <button
+                key={locale}
+                type="button"
+                aria-pressed={language === locale}
+                onClick={() => changeLanguage(locale)}
+              >
+                {locale.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </header>
+        <div className="mt-5">
+          <AccountPanel language={language} showHistoryLink={false} />
+        </div>
+        <div id="history-content" className="mt-8 mb-6">
+          <h1
+            id="history-heading"
+            tabIndex={-1}
+            className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl"
+          >
+            {t.history}
+          </h1>
+          <p className="mt-2 max-w-prose text-base leading-7 text-slate-600">
+            {language === "th"
+              ? "ดูข้อมูลที่บันทึกไว้ กรองวันที่ และเปรียบเทียบสองรายการ"
+              : "Revisit saved measurements, filter by date and compare two assessments."}
+          </p>
+        </div>
+        <HistoryWorkspaceContent
+          key={account.user?.id ?? "signed-out"}
+          language={language}
+        />
+      </div>
+    </main>
+  );
+}
+
+/** Remount only account-owned drafts, notices and mutations when the owner changes. */
+function HistoryWorkspaceContent({ language }: { language: Language }) {
+  const t = getWorkspaceTranslations(language);
+  const numberFormatter = new Intl.NumberFormat(
+    language === "th" ? "th-TH" : "en-US",
+    { maximumFractionDigits: 2 },
+  );
   const account = useAccount();
   const owner = account.user?.id ?? "";
   const [query, setQuery] = useState({ from: "", to: "", page: 1 });
@@ -70,9 +154,6 @@ export function HistoryWorkspace({
     )?.focus();
   }, [loading, owner, response.key]);
   useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
-  useEffect(() => {
     if (!owner) return;
     let active = true;
     const params = new URLSearchParams({
@@ -95,12 +176,6 @@ export function HistoryWorkspace({
       active = false;
     };
   }, [owner, query, requestKey]);
-  function changeLanguage(next: Language) {
-    setLanguage(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("lang", next);
-    window.history.replaceState(null, "", url);
-  }
   function filter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (draftDates.from && draftDates.to && draftDates.from > draftDates.to) {
@@ -179,217 +254,190 @@ export function HistoryWorkspace({
     }
   }
   return (
-    <main
-      lang={language}
-      className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 sm:px-8 sm:py-10"
-    >
-      <div className="mx-auto max-w-5xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+    <>
+      {account.loading ? (
+        <p
+          aria-live="polite"
+          className="hm-surface p-5 text-base text-slate-600"
+        >
+          {t.loadingSession}
+        </p>
+      ) : !account.user ? (
+        <div className="hm-surface p-5 text-base leading-7 text-slate-700">
+          <p>{t.authRequired}</p>
           <a
-            href={`/?lang=${language}`}
-            className="text-xl font-black tracking-tight text-emerald-800"
+            href="#account"
+            onClick={() => openAccountPanel()}
+            className="mt-3 inline-block font-semibold text-emerald-800 underline underline-offset-4"
           >
-            H+ HealthMetrics
+            {t.signIn}
           </a>
-          <div
-            role="group"
-            aria-label={language === "th" ? "เลือกภาษา" : "Language selector"}
-            className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1"
-          >
-            {(["en", "th"] as const).map((locale) => (
-              <button
-                key={locale}
-                type="button"
-                aria-pressed={language === locale}
-                onClick={() => changeLanguage(locale)}
-                className={`rounded-lg px-3 py-2 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700 ${language === locale ? "bg-emerald-700 text-white" : "text-slate-600"}`}
-              >
-                {locale.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </header>
-        <div>
-          <a
-            href={`/?lang=${language}`}
-            className="text-sm font-bold text-emerald-800 underline underline-offset-4"
-          >
-            ← {t.back}
-          </a>
-          <h1
-            id="history-heading"
-            tabIndex={-1}
-            className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl"
-          >
-            {t.history}
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-            {t.historyHelp}
-          </p>
         </div>
-        <AccountPanel language={language} />
-        {account.loading ? (
-          <p aria-live="polite" className="text-sm text-slate-600">
-            {t.loadingSession}
-          </p>
-        ) : !account.user ? (
-          <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
-            {t.authRequired}{" "}
-            <a href="#account" className="font-bold text-emerald-800 underline">
-              {t.signIn}
-            </a>
-          </p>
-        ) : (
-          <>
-            <p className="text-sm text-slate-600">{t.privateHistory}</p>
-            <form
-              onSubmit={filter}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
-            >
-              <div className="flex flex-wrap items-end gap-3">
-                <label
-                  htmlFor="filter-from"
-                  className="min-w-0 w-full text-sm font-semibold text-slate-700 sm:flex-1"
-                >
-                  {t.from}
-                  <input
-                    id="filter-from"
-                    data-testid="filter-from"
-                    type="date"
-                    value={draftDates.from}
-                    onChange={(event) =>
-                      setDraftDates({ ...draftDates, from: event.target.value })
-                    }
-                    className="mt-1 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </label>
-                <label
-                  htmlFor="filter-to"
-                  className="min-w-0 w-full text-sm font-semibold text-slate-700 sm:flex-1"
-                >
-                  {t.to}
-                  <input
-                    id="filter-to"
-                    data-testid="filter-to"
-                    type="date"
-                    value={draftDates.to}
-                    onChange={(event) =>
-                      setDraftDates({ ...draftDates, to: event.target.value })
-                    }
-                    className="mt-1 block w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </label>
-                <button
-                  data-testid="filter-apply"
-                  type="submit"
-                  className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800"
-                >
-                  {t.filter}
-                </button>
-                <button
-                  data-testid="filter-clear"
-                  type="button"
-                  className={actionStyle}
-                  onClick={() => {
-                    setDraftDates({ from: "", to: "" });
-                    setQuery({ from: "", to: "", page: 1 });
-                    setFilterError(false);
-                  }}
-                >
-                  {t.reset}
-                </button>
-              </div>
-              {filterError && (
-                <p
-                  role="alert"
-                  className="mt-3 text-sm font-medium text-rose-800"
-                >
-                  {t.invalidDates}
-                </p>
-              )}
-            </form>
-            <section aria-label={t.compare} className="space-y-3">
-              <p className="text-sm leading-6 text-slate-600">
-                {t.compareHelp}
-              </p>
-              {selected.length === 2 ? (
-                <AssessmentComparison
-                  records={selected as [Assessment, Assessment]}
-                  language={language}
-                  onClear={() => setSelection({ owner, items: [] })}
+      ) : (
+        <div className="space-y-6">
+          <form
+            onSubmit={filter}
+            aria-label={language === "th" ? "กรองประวัติ" : "Filter history"}
+            className="hm-surface p-5 sm:p-6"
+          >
+            <div className="grid grid-cols-2 items-end gap-4 sm:grid-cols-[1fr_1fr_auto_auto]">
+              <label
+                htmlFor="filter-from"
+                className="col-span-2 min-w-0 text-sm font-medium text-slate-700 sm:col-span-1"
+              >
+                {t.from}
+                <input
+                  id="filter-from"
+                  data-testid="filter-from"
+                  name="from"
+                  autoComplete="off"
+                  type="date"
+                  value={draftDates.from}
+                  onChange={(event) =>
+                    setDraftDates({ ...draftDates, from: event.target.value })
+                  }
+                  className="hm-input mt-2"
                 />
-              ) : selected.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                  <p className="min-w-0 break-words text-sm text-emerald-900">
-                    1/2: {selected[0].title}
+              </label>
+              <label
+                htmlFor="filter-to"
+                className="col-span-2 min-w-0 text-sm font-medium text-slate-700 sm:col-span-1"
+              >
+                {t.to}
+                <input
+                  id="filter-to"
+                  data-testid="filter-to"
+                  name="to"
+                  autoComplete="off"
+                  type="date"
+                  value={draftDates.to}
+                  onChange={(event) =>
+                    setDraftDates({ ...draftDates, to: event.target.value })
+                  }
+                  className="hm-input mt-2"
+                />
+              </label>
+              <button
+                data-testid="filter-apply"
+                type="submit"
+                className="hm-button"
+              >
+                {t.filter}
+              </button>
+              <button
+                data-testid="filter-clear"
+                type="button"
+                className="hm-button-secondary"
+                onClick={() => {
+                  setDraftDates({ from: "", to: "" });
+                  setQuery({ from: "", to: "", page: 1 });
+                  setFilterError(false);
+                }}
+              >
+                {t.reset}
+              </button>
+            </div>
+            {filterError && (
+              <p
+                role="alert"
+                className="mt-3 text-sm font-medium text-rose-800"
+              >
+                {t.invalidDates}
+              </p>
+            )}
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              {t.privateHistory}
+            </p>
+          </form>
+          {selected.length === 2 ? (
+            <AssessmentComparison
+              records={selected as [Assessment, Assessment]}
+              language={language}
+              onClear={() => setSelection({ owner, items: [] })}
+            />
+          ) : selected.length === 1 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+              <p className="min-w-0 break-words text-sm leading-6 text-emerald-950">
+                {language === "th"
+                  ? "เลือกแล้ว 1 จาก 2 รายการ: "
+                  : "Selected 1 of 2: "}
+                <strong className="font-semibold">{selected[0].title}</strong>
+              </p>
+              <button
+                type="button"
+                onClick={() => setSelection({ owner, items: [] })}
+                className="text-sm font-semibold text-emerald-800 underline underline-offset-4"
+              >
+                {t.clearComparison}
+              </button>
+            </div>
+          ) : null}
+          {notice && (
+            <p
+              role="status"
+              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-950"
+            >
+              {t[notice]}
+            </p>
+          )}
+          {mutationError !== null && (
+            <p role="alert" className="text-sm font-medium text-rose-800">
+              {apiErrorText(mutationError, language)}
+            </p>
+          )}
+          <section
+            aria-labelledby="history-list-heading"
+            className="hm-surface min-w-0 overflow-hidden"
+          >
+            <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="history-list-heading" className="hm-section-heading">
+                  {language === "th" ? "รายการที่บันทึก" : "Saved assessments"}
+                </h2>
+                {data && (
+                  <p className="text-sm tabular-nums text-slate-600">
+                    {data.total} {t.records}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => setSelection({ owner, items: [] })}
-                    className="text-sm font-bold text-emerald-800 underline"
-                  >
-                    {t.clearComparison}
-                  </button>
-                </div>
-              ) : null}
-              {selected.length === 2 && (
-                <p className="text-xs text-slate-600">{t.compareLimit}</p>
-              )}
-            </section>
-            {notice && (
-              <p
-                role="status"
-                className="rounded-xl bg-emerald-100 p-3 text-sm font-semibold text-emerald-900"
-              >
-                {t[notice]}
+                )}
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                {selected.length === 2 ? t.compareLimit : t.compareHelp}
               </p>
-            )}
-            {mutationError !== null && (
-              <p role="alert" className="text-sm font-medium text-rose-800">
-                {apiErrorText(mutationError, language)}
-              </p>
-            )}
+            </div>
             {loading ? (
-              <p
-                role="status"
-                className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600"
-              >
+              <p role="status" className="p-5 text-base text-slate-600 sm:p-6">
                 {t.loadingRecords}
               </p>
             ) : response.error ? (
-              <div
-                role="alert"
-                className="rounded-2xl border border-rose-200 bg-white p-5"
-              >
-                <p className="text-sm text-rose-800">
+              <div role="alert" className="p-5 sm:p-6">
+                <p className="text-base leading-7 text-rose-800">
                   {t.loadError} {apiErrorText(response.error, language)}
                 </p>
                 <button
                   onClick={() => setRevision((value) => value + 1)}
                   type="button"
-                  className={`${actionStyle} mt-4`}
+                  className="hm-button-secondary mt-4"
                 >
                   {t.retry}
                 </button>
               </div>
             ) : data?.items.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6">
-                <h2 className="text-xl font-bold">
+              <div className="px-5 py-8 sm:px-6">
+                <h3 className="text-lg font-semibold text-slate-950">
                   {query.from || query.to ? t.noFiltered : t.noRecords}
-                </h2>
-                <p className="mt-2 text-sm text-slate-600">{t.noRecordsHelp}</p>
-                <a
-                  href={`/?lang=${language}#calculator`}
-                  className="mt-4 inline-block text-sm font-bold text-emerald-800 underline"
+                </h3>
+                <p className="mt-2 text-base leading-7 text-slate-600">
+                  {t.noRecordsHelp}
+                </p>
+                <Link
+                  href={"/?lang=" + language + "#calculator"}
+                  className="hm-button mt-4 inline-flex"
                 >
                   {t.back}
-                </a>
+                </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-slate-600">
-                  {data?.total ?? 0} {t.records}
-                </p>
+              <div className="divide-y divide-slate-200">
                 {data?.items.map((item) => {
                   const checked = selected.some(
                     (record) => record.id === item.id,
@@ -399,30 +447,32 @@ export function HistoryWorkspace({
                       key={item.id}
                       data-testid="assessment-card"
                       data-assessment-id={item.id}
-                      className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+                      className="min-w-0 px-5 py-5 sm:px-6 sm:py-6"
                     >
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <h2 className="break-words text-xl font-bold text-slate-950">
+                      <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+                        <div className="min-w-0 w-full sm:w-auto sm:flex-1">
+                          <h3 className="break-words text-lg font-semibold leading-7 text-slate-950">
                             {item.title}
-                          </h2>
-                          <p className="mt-1 text-sm text-slate-600">
+                          </h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">
                             {t.measuredAt}:{" "}
                             <time dateTime={item.measuredAt}>
                               {formatMeasurementDate(item.measuredAt, language)}
                             </time>
                           </p>
-                          <p className="mt-2 text-sm text-slate-700">
-                            {item.profile.weight} kg · {item.profile.height} cm
-                            · BMI{" "}
-                            {new Intl.NumberFormat(
-                              language === "th" ? "th-TH" : "en-US",
-                              { maximumFractionDigits: 2 },
-                            ).format(item.result.bmi)}
+                          <p className="mt-2 text-sm leading-6 tabular-nums text-slate-700">
+                            {numberFormatter.format(item.profile.weight)} kg ·{" "}
+                            {numberFormatter.format(item.profile.height)} cm ·
+                            BMI {numberFormatter.format(item.result.bmi)}
                           </p>
                         </div>
                         <label
-                          className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold ${checked ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-slate-300 text-slate-700"}`}
+                          className={
+                            "flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium " +
+                            (checked
+                              ? "border-emerald-600 bg-emerald-50 text-emerald-950"
+                              : "border-slate-300 text-slate-700 hover:border-emerald-600")
+                          }
                         >
                           <input
                             data-testid="compare-select"
@@ -430,8 +480,8 @@ export function HistoryWorkspace({
                             checked={checked}
                             disabled={!checked && selected.length === 2}
                             onChange={() => toggleComparison(item)}
-                            aria-label={`${t.compare}: ${item.title}`}
-                            className="size-4 accent-emerald-700"
+                            aria-label={t.compare + ": " + item.title}
+                            className="size-4 accent-emerald-800"
                           />
                           {t.compare}
                         </label>
@@ -441,7 +491,7 @@ export function HistoryWorkspace({
                           data-testid="view-assessment"
                           type="button"
                           aria-expanded={detailId === item.id}
-                          aria-controls={`snapshot-${item.id}`}
+                          aria-controls={"snapshot-" + item.id}
                           className={actionStyle}
                           onClick={() =>
                             setDetailId(detailId === item.id ? null : item.id)
@@ -468,7 +518,7 @@ export function HistoryWorkspace({
                         <button
                           data-testid="delete-assessment"
                           type="button"
-                          className={`${actionStyle} text-rose-800`}
+                          className={actionStyle + " text-rose-800"}
                           disabled={pendingDelete}
                           onClick={() => {
                             setDeletingId(item.id);
@@ -482,22 +532,22 @@ export function HistoryWorkspace({
                       {deletingId === item.id && (
                         <div
                           role="group"
-                          aria-label={`${t.confirmDelete} ${item.title}`}
-                          className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4"
+                          aria-label={t.confirmDelete + " " + item.title}
+                          className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4"
                         >
-                          <p className="font-bold text-rose-900">
+                          <p className="font-semibold text-rose-950">
                             {t.confirmDelete}
                           </p>
-                          <p className="mt-1 break-words text-sm text-rose-800">
+                          <p className="mt-1 break-words text-sm leading-6 text-rose-900">
                             {item.title} — {t.deleteHelp}
                           </p>
-                          <div className="mt-3 flex flex-wrap gap-3">
+                          <div className="mt-4 flex flex-wrap gap-3">
                             <button
                               data-testid="confirm-delete"
                               type="button"
                               disabled={pendingDelete}
                               onClick={() => void remove(item)}
-                              className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                              className="rounded-lg bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700 disabled:opacity-50"
                             >
                               {pendingDelete ? t.working : t.confirm}
                             </button>
@@ -508,7 +558,9 @@ export function HistoryWorkspace({
                                 setDeletingId(null);
                                 document
                                   .querySelector<HTMLElement>(
-                                    `[data-assessment-id="${CSS.escape(item.id)}"] [data-testid="delete-assessment"]`,
+                                    '[data-assessment-id="' +
+                                      CSS.escape(item.id) +
+                                      '"] [data-testid="delete-assessment"]',
                                   )
                                   ?.focus();
                               }}
@@ -528,7 +580,9 @@ export function HistoryWorkspace({
                             setEditingId(null);
                             document
                               .querySelector<HTMLElement>(
-                                `[data-assessment-id="${CSS.escape(item.id)}"] [data-testid="edit-assessment"]`,
+                                '[data-assessment-id="' +
+                                  CSS.escape(item.id) +
+                                  '"] [data-testid="edit-assessment"]',
                               )
                               ?.focus();
                           }}
@@ -536,17 +590,21 @@ export function HistoryWorkspace({
                       )}
                       {detailId === item.id && (
                         <div
-                          id={`snapshot-${item.id}`}
-                          className="mt-5 min-w-0 border-t border-slate-200 pt-5"
+                          id={"snapshot-" + item.id}
+                          className="mt-6 min-w-0 border-t border-slate-200 pt-6"
                         >
-                          <h3 className="text-lg font-bold">{t.snapshot}</h3>
-                          <p className="mb-4 mt-2 break-words text-xs text-slate-600">
-                            {t.version}: {item.formulaVersion} · {t.savedAt}:{" "}
-                            {formatMeasurementDate(
-                              item.createdAt.slice(0, 10),
-                              language,
-                            )}
-                          </p>
+                          <div className="mb-5">
+                            <h4 className="text-base font-semibold text-slate-950">
+                              {t.snapshot}
+                            </h4>
+                            <p className="mt-1 break-words text-sm leading-6 text-slate-600">
+                              {t.version}: {item.formulaVersion} · {t.savedAt}:{" "}
+                              {formatMeasurementDate(
+                                item.createdAt.slice(0, 10),
+                                language,
+                              )}
+                            </p>
+                          </div>
                           <ResultCard
                             language={language}
                             result={item.result}
@@ -556,44 +614,40 @@ export function HistoryWorkspace({
                     </article>
                   );
                 })}
-                {data && (
-                  <nav
-                    aria-label={t.page}
-                    className="flex flex-wrap items-center justify-between gap-3"
-                  >
-                    <button
-                      data-testid="previous-page"
-                      type="button"
-                      className={actionStyle}
-                      disabled={query.page <= 1}
-                      onClick={() =>
-                        setQuery({ ...query, page: query.page - 1 })
-                      }
-                    >
-                      {t.previous}
-                    </button>
-                    <p className="text-sm text-slate-600">
-                      {t.page} {query.page} /{" "}
-                      {Math.max(1, Math.ceil(data.total / data.pageSize))}
-                    </p>
-                    <button
-                      data-testid="next-page"
-                      type="button"
-                      className={actionStyle}
-                      disabled={query.page * data.pageSize >= data.total}
-                      onClick={() =>
-                        setQuery({ ...query, page: query.page + 1 })
-                      }
-                    >
-                      {t.next}
-                    </button>
-                  </nav>
-                )}
               </div>
             )}
-          </>
-        )}
-      </div>
-    </main>
+            {!loading && data && data.total > 0 && (
+              <nav
+                aria-label={t.page}
+                className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 sm:px-6"
+              >
+                <button
+                  data-testid="previous-page"
+                  type="button"
+                  className={actionStyle}
+                  disabled={query.page <= 1}
+                  onClick={() => setQuery({ ...query, page: query.page - 1 })}
+                >
+                  {t.previous}
+                </button>
+                <p className="text-sm tabular-nums text-slate-600">
+                  {t.page} {query.page} /{" "}
+                  {Math.max(1, Math.ceil(data.total / data.pageSize))}
+                </p>
+                <button
+                  data-testid="next-page"
+                  type="button"
+                  className={actionStyle}
+                  disabled={query.page * data.pageSize >= data.total}
+                  onClick={() => setQuery({ ...query, page: query.page + 1 })}
+                >
+                  {t.next}
+                </button>
+              </nav>
+            )}
+          </section>
+        </div>
+      )}
+    </>
   );
 }

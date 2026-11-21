@@ -377,6 +377,8 @@ for (const language of ["th", "en"] as const) {
     await page.goto("/");
     if (language === "en")
       await page.getByRole("button", { name: "EN", exact: true }).click();
+    await expect(page.getByTestId("auth-toggle")).toBeVisible();
+    await page.getByTestId("auth-toggle").click();
     await page.getByTestId("auth-signup-mode").click();
     await page.getByTestId("auth-name").fill(account.name);
     await page.getByTestId("auth-email").fill(account.email);
@@ -389,7 +391,11 @@ for (const language of ["th", "en"] as const) {
         exact: true,
       })
       .click();
-    const title = `Baseline ${randomUUID().slice(0, 8)}`;
+    const title = `${
+      language === "th"
+        ? "บันทึกติดตามสุขภาพ น้ำหนัก พลังงาน และกิจกรรมประจำวันหลังปรับพฤติกรรมเพื่อใช้เปรียบเทียบผลการคำนวณ"
+        : "Morning health assessment after a week of walking, regular meals and rest, tracking weight and daily energy"
+    } ${randomUUID()}`.slice(0, 120);
     await page.getByTestId("save-title").fill(title);
     await page.getByTestId("save-date").fill("2024-01-19");
     await expectDateFitsViewport(page, "save-date");
@@ -402,6 +408,19 @@ for (const language of ["th", "en"] as const) {
     const response = await saveResponse;
     expect(response.ok(), await response.text()).toBe(true);
     const saved = (await response.json()) as Assessment;
+    await expect(
+      page.getByText(
+        language === "th"
+          ? "บันทึกผลลงในประวัติแล้ว"
+          : "Assessment saved to your history.",
+        { exact: true },
+      ),
+    ).toBeVisible();
+    if ([320, 1280].includes(page.viewportSize()!.width))
+      await page.screenshot({
+        path: testInfo.outputPath(`calculator-saved-${language}.png`),
+        fullPage: true,
+      });
     const secondResponse = await page.request.post("/api/assessments", {
       headers: { Origin: baseURL! },
       data: {
@@ -433,6 +452,50 @@ for (const language of ["th", "en"] as const) {
     await expect(comparison).toBeVisible();
     await expect(comparison).toContainText(title);
     await expect(comparison).toContainText("Follow-up");
+    await expect(
+      comparison.getByTestId("comparison-record-first"),
+    ).toContainText(title);
+    for (const id of ["comparison-record-first", "comparison-record-second"])
+      expect(
+        await comparison
+          .getByTestId(id)
+          .evaluate((element) => element.scrollWidth <= element.clientWidth),
+      ).toBe(true);
+    if (page.viewportSize()!.width < 640) {
+      const mobile = comparison.getByTestId("comparison-mobile");
+      await expect(mobile).toBeVisible();
+      await expect(
+        comparison.getByTestId("comparison-desktop"),
+      ).not.toBeVisible();
+      expect(
+        await mobile.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+      for (const metric of [
+        { key: "weight", values: ["70", "72", "+2"] },
+        { key: "tdee", values: ["1,978.5", "2,002.5", "+24"] },
+      ]) {
+        const row = mobile.locator(`[data-metric="${metric.key}"]`);
+        await row.scrollIntoViewIfNeeded();
+        for (const [index, testId] of [
+          "comparison-first-value",
+          "comparison-second-value",
+          "comparison-difference",
+        ].entries()) {
+          const value = row.getByTestId(testId);
+          await expect(value).toHaveText(metric.values[index]);
+          await expect(value).toBeInViewport({ ratio: 1 });
+          const box = await value.boundingBox();
+          expect(box!.x).toBeGreaterThanOrEqual(0);
+          expect(box!.x + box!.width).toBeLessThanOrEqual(
+            page.viewportSize()!.width + 0.5,
+          );
+        }
+      }
+    } else {
+      await expect(comparison.getByTestId("comparison-desktop")).toBeVisible();
+    }
     if ([320, 1280].includes(page.viewportSize()!.width))
       await page.screenshot({
         path: testInfo.outputPath(`history-comparison-${language}.png`),
@@ -478,6 +541,7 @@ for (const language of ["th", "en"] as const) {
     await expect(followUp).toBeVisible();
     await page.getByTestId("auth-signout").click();
     await expect(page.getByTestId("auth-submit")).toBeVisible();
+    await expect(page.getByTestId("auth-email")).toBeFocused();
     await page.reload();
     await expect(page.getByTestId("assessment-card")).toHaveCount(0);
     expect(failures).toEqual([]);

@@ -97,4 +97,11 @@ BMI display uses a less-than sign near category boundaries when rounding would o
 
 ## Screenshots
 
-These screenshots use fictional accounts and example measurements from the isolated browser tests: [desktop history and comparison](docs/screenshots/history-desktop-th.png) · [mobile history and comparison](docs/screenshots/history-mobile-th.png).
+These current production-build screenshots use a fictional presentation account and example measurements in an isolated temporary database:
+
+- Calculator: [desktop](docs/screenshots/calculator-desktop-th.png) · [mobile](docs/screenshots/calculator-mobile-th.png)
+- History and comparison: [desktop](docs/screenshots/history-desktop-th.png) · [mobile](docs/screenshots/history-mobile-th.png)
+
+## Agent development guidance
+
+Four project-scoped, commit-pinned skills support React, Better Auth and UX/UI work. See [selection, application and verification](docs/agent-skills.md). `AGENTS.md` routes relevant tasks; `npm run verify:skills` checks source integrity and is included in the standard checks.

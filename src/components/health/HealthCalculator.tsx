@@ -1,46 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { AccountPanel } from "../../components/account/AccountPanel";
-import { SaveAssessment } from "../../components/history/SaveAssessment";
-import { workspaceTranslations } from "../../utils/workspace-translations";
-import type { UserProfile } from "../../types";
-import { HealthForm } from "../../components/health/HealthForm";
-import { ResultCard } from "../../components/health/ResultCard";
+import { AccountPanel } from "../account/AccountPanel";
+import { SaveAssessment } from "../history/SaveAssessment";
+import { HealthForm } from "./HealthForm";
+import { ResultCard } from "./ResultCard";
 import { useHealthCalculator } from "../../hooks/useHealthCalculator";
-import type { Language } from "../../types";
+import type { Language, UserProfile } from "../../types";
 import { getTranslations } from "../../utils/translations";
 
-interface ResultPlaceholderProps {
-  language: Language;
-}
-
-function ResultPlaceholder({ language }: ResultPlaceholderProps) {
+function ResultPlaceholder({ language }: { language: Language }) {
   const t = getTranslations(language);
-
   return (
-    <section className="rounded-3xl border border-dashed border-slate-300 bg-white/60 p-6 sm:p-8">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-100 text-2xl text-emerald-700">
-        ✦
-      </div>
-      <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
+    <section
+      className="hm-surface px-6 py-8 sm:px-8 sm:py-10"
+      aria-labelledby="result-placeholder-heading"
+    >
+      <svg
+        className="mb-6 text-emerald-800"
+        width="40"
+        height="40"
+        viewBox="0 0 40 40"
+        fill="none"
+        aria-hidden="true"
+      >
+        <rect
+          x="5"
+          y="3"
+          width="30"
+          height="34"
+          rx="5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M12 12h16M12 20h6m-6 8h6m6-8h4m-4 8h4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+      <h2 id="result-placeholder-heading" className="hm-section-heading">
         {t.page.resultPlaceholderTitle}
       </h2>
-      <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
+      <p className="hm-muted mt-3 max-w-lg text-base leading-7">
         {t.page.resultPlaceholderDescription}
       </p>
-
-      <div className="mt-8 space-y-3">
+      <dl className="mt-8 divide-y divide-slate-200">
         {[t.results.bmi, t.results.bmr, t.results.tdee].map((label) => (
           <div
-            className="flex items-center justify-between rounded-xl bg-slate-100 px-4 py-3"
+            className="flex items-center justify-between gap-4 py-4"
             key={label}
           >
-            <span className="text-sm font-medium text-slate-500">{label}</span>
-            <span className="h-5 w-16 rounded bg-slate-200" />
+            <dt className="hm-muted text-sm">{label}</dt>
+            <dd aria-hidden="true" className="text-xl text-slate-400">
+              —
+            </dd>
           </div>
         ))}
-      </div>
+      </dl>
     </section>
   );
 }
@@ -60,89 +78,75 @@ export default function HealthCalculator({
     updateProfile,
   } = useHealthCalculator(initialLanguage);
   const t = getTranslations(language);
-  const workspace = workspaceTranslations[language];
-
+  const copy =
+    language === "th"
+      ? {
+          calculator: "เครื่องคำนวณ",
+          history: "ประวัติ",
+          skip: "ข้ามไปยังเครื่องคำนวณ",
+        }
+      : {
+          calculator: "Calculator",
+          history: "History",
+          skip: "Skip to calculator",
+        };
+  function changeLanguage(next: Language) {
+    setLanguage(next);
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", url);
+  }
   return (
-    <main
-      lang={language}
-      className="min-h-screen overflow-hidden bg-slate-50 text-slate-900"
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[34rem] bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_38%),radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_32%)]" />
-
-      <div className="relative z-10 mx-auto max-w-7xl w-full px-5 pb-12 pt-6 sm:px-8 sm:pt-8 lg:px-10">
-        <header className="flex items-center justify-between">
-          <a className="flex items-center gap-3" href="#calculator">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-600 text-lg font-black text-white shadow-lg shadow-emerald-600/25">
+    <main lang={language} className="hm-page">
+      <a href="#calculator" className="hm-skip-link">
+        {copy.skip}
+      </a>
+      <div className="hm-shell">
+        <header className="hm-app-header">
+          <Link href={`/?lang=${language}`} className="hm-brand" translate="no">
+            <span className="hm-brand-mark" aria-hidden="true">
               H+
             </span>
-            <span className="text-lg font-bold tracking-tight text-slate-900">
-              HealthMetrics
-            </span>
-          </a>
-          <div
-            aria-label={language === "th" ? "เลือกภาษา" : "Language selector"}
-            className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
-            role="group"
+            HealthMetrics
+          </Link>
+          <nav
+            className="hm-nav"
+            aria-label={language === "th" ? "เมนูหลัก" : "Main navigation"}
           >
-            <button
-              aria-pressed={language === "en"}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                language === "en"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-100"
-              }`}
-              onClick={() => setLanguage("en")}
-              type="button"
-            >
-              {t.common.english}
-            </button>
-            <button
-              aria-pressed={language === "th"}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                language === "th"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-100"
-              }`}
-              onClick={() => setLanguage("th")}
-              type="button"
-            >
-              {t.common.thai}
-            </button>
+            <Link href={`/?lang=${language}`} aria-current="page">
+              {copy.calculator}
+            </Link>
+            <Link href={`/history?lang=${language}`}>{copy.history}</Link>
+          </nav>
+          <div
+            className="hm-lang"
+            role="group"
+            aria-label={language === "th" ? "เลือกภาษา" : "Language selector"}
+          >
+            {(["en", "th"] as const).map((locale) => (
+              <button
+                key={locale}
+                type="button"
+                aria-pressed={language === locale}
+                onClick={() => changeLanguage(locale)}
+              >
+                {locale.toUpperCase()}
+              </button>
+            ))}
           </div>
         </header>
-
-        <section className="mx-auto max-w-3xl pb-10 pt-16 text-center sm:pb-14 sm:pt-20">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-600">
-            {t.page.eyebrow}
-          </p>
-          <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl flex flex-col items-center">
-            <span>{t.page.titleStart}</span>
-            <span className="mt-2 text-emerald-600">
+        <section className="hm-intro">
+          <h1>
+            {t.page.titleStart}
+            <span className="block sm:ml-2 sm:inline">
               {t.page.titleHighlight}
             </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-            {t.page.subtitle}
-          </p>
+          <p>{t.page.subtitle}</p>
         </section>
-
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <Link
-            href={`/history?lang=${language}`}
-            className="rounded-xl border border-emerald-200 bg-white px-5 py-3 font-semibold text-emerald-800 hover:bg-emerald-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
-          >
-            {workspace.historyLink}
-          </Link>
-        </div>
-        <div className="mb-6">
-          <AccountPanel language={language} />
-        </div>
-        <div
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/60 flex flex-col lg:flex-row items-stretch"
-          id="calculator"
-        >
-          {/* Left Pane (HealthForm) */}
-          <div className="w-full lg:w-[420px] shrink-0 bg-white p-5 sm:p-8 flex flex-col justify-start">
+        <AccountPanel language={language} showHistoryLink={false} />
+        <div id="calculator" className="hm-calculator-grid">
+          <section className="hm-surface p-5 sm:p-6">
             <HealthForm
               errors={errors}
               language={language}
@@ -150,25 +154,28 @@ export default function HealthCalculator({
               onProfileChange={updateProfile}
               profile={profile}
             />
-          </div>
-          {/* Right Pane (ResultCard / ResultPlaceholder) */}
-          <div className="min-w-0 flex-1 bg-slate-50 p-3 sm:p-6 border-t lg:border-t-0 lg:border-l border-slate-200/60">
+          </section>
+          <div className="min-w-0">
             {result ? (
               <div className="space-y-6">
-                <SaveAssessment
+                <ResultCard
                   language={language}
-                  profile={profile as UserProfile}
                   result={result}
+                  afterSummary={
+                    <SaveAssessment
+                      language={language}
+                      profile={profile as UserProfile}
+                      result={result}
+                    />
+                  }
                 />
-                <ResultCard language={language} result={result} />
               </div>
             ) : (
               <ResultPlaceholder language={language} />
             )}
           </div>
         </div>
-
-        <footer className="mt-10 text-center text-xs leading-5 text-slate-500">
+        <footer className="hm-muted mt-10 border-t border-slate-200 pb-8 pt-5 text-sm leading-6">
           {t.page.footer}
         </footer>
       </div>

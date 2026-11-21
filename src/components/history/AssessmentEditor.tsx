@@ -14,8 +14,7 @@ import {
 } from "../../utils/workspace-translations";
 import { apiErrorText } from "../account/client";
 
-const inputStyle =
-  "mt-1 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:opacity-60";
+const inputStyle = "hm-input mt-2";
 
 export function AssessmentEditor({
   assessment,
@@ -83,11 +82,11 @@ export function AssessmentEditor({
       aria-labelledby={`${id}-heading`}
       noValidate
       onSubmit={(event) => void submit(event)}
-      className="mt-5 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 sm:p-6"
+      className="mt-6 border-t border-slate-200 pt-6"
     >
-      <h3 id={`${id}-heading`} className="text-lg font-bold text-slate-950">
+      <h4 id={`${id}-heading`} className="hm-section-heading">
         {t.editTitle}
-      </h3>
+      </h4>
       <p className="mt-2 text-sm leading-6 text-slate-600">{t.editHelp}</p>
       <fieldset
         disabled={pending}
@@ -105,6 +104,7 @@ export function AssessmentEditor({
             name="title"
             value={title}
             maxLength={120}
+            autoComplete="off"
             required
             aria-invalid={metadataError === "title"}
             aria-describedby={
@@ -124,6 +124,7 @@ export function AssessmentEditor({
             data-testid="edit-date"
             name="measuredAt"
             type="date"
+            autoComplete="off"
             max={todayLocal()}
             value={date}
             required
@@ -180,6 +181,8 @@ export function AssessmentEditor({
               data-testid={`edit-${field}`}
               name={field}
               type="number"
+              autoComplete="off"
+              inputMode={field === "age" ? "numeric" : "decimal"}
               min={PROFILE_LIMITS[field].min}
               max={PROFILE_LIMITS[field].max}
               step={PROFILE_LIMITS[field].step}
@@ -248,7 +251,7 @@ export function AssessmentEditor({
           data-testid="edit-submit"
           type="submit"
           disabled={pending}
-          className="rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-60"
+          className="hm-button"
         >
           {pending ? t.working : t.update}
         </button>
@@ -257,7 +260,7 @@ export function AssessmentEditor({
           type="button"
           disabled={pending}
           onClick={onCancel}
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700"
+          className="hm-button-secondary"
         >
           {t.cancel}
         </button>

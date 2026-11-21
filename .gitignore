@@ -42,3 +42,6 @@ next-dev*.log
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Local design-tool cache
+.impeccable/

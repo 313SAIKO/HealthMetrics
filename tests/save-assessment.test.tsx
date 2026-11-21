@@ -39,9 +39,33 @@ const view = (language: "en" | "th" = "en") => (
 );
 beforeEach(() => {
   account.user = { id: "account-a", name: "A", email: "a@example.test" };
+  account.loading = false;
+  account.error = false;
   vi.mocked(apiRequest).mockReset();
 });
 afterEach(cleanup);
+
+it("preserves an unsaved draft through same-account refresh while hiding the form during loading", () => {
+  const page = render(view());
+  fireEvent.change(screen.getByTestId("save-title"), {
+    target: { value: "Still writing" },
+  });
+  fireEvent.change(screen.getByTestId("save-date"), {
+    target: { value: "2024-05-12" },
+  });
+  account.loading = true;
+  page.rerender(view());
+  expect(screen.queryByTestId("save-assessment-form")).toBeNull();
+  account.loading = false;
+  page.rerender(view());
+  expect((screen.getByTestId("save-title") as HTMLInputElement).value).toBe(
+    "Still writing",
+  );
+  expect((screen.getByTestId("save-date") as HTMLInputElement).value).toBe(
+    "2024-05-12",
+  );
+  expect(apiRequest).not.toHaveBeenCalled();
+});
 
 it("sends only explicit inputs and gives another account a fresh save form", async () => {
   vi.mocked(apiRequest).mockResolvedValue({ id: "saved" });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AccountProvider } from "../components/account/AccountProvider";
 
 import "./globals.css";
 
@@ -15,7 +16,25 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
     <html lang="th">
-      <body>{children}</body>
+      <head>
+        <link
+          rel="preload"
+          href="/fonts/noto-sans-thai-thai.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/noto-sans-thai-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body>
+        <AccountProvider>{children}</AccountProvider>
+      </body>
     </html>
   );
 }
