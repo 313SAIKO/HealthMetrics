@@ -1,13 +1,14 @@
 import type {
   Gender,
+  BMICategory,
   IdealWeight,
   MacronutrientDietPlans,
   MacronutrientSplit,
   Macronutrients,
   TDEEActivityTable,
-} from '../types';
+} from "../types";
 
-const ACTIVITY_MULTIPLIERS = {
+export const ACTIVITY_MULTIPLIERS = {
   sedentary: 1.2,
   light: 1.375,
   moderate: 1.55,
@@ -15,7 +16,9 @@ const ACTIVITY_MULTIPLIERS = {
   athlete: 1.9,
 } as const;
 
-const MACRONUTRIENT_DISTRIBUTIONS = {
+export const ENERGY_PER_GRAM = { protein: 4, carbs: 4, fat: 9 } as const;
+
+export const MACRONUTRIENT_DISTRIBUTIONS = {
   moderateCarb: { carbs: 0.4, fat: 0.3, protein: 0.3 },
   lowerCarb: { carbs: 0.2, fat: 0.4, protein: 0.4 },
   higherCarb: { carbs: 0.5, fat: 0.2, protein: 0.3 },
@@ -23,26 +26,30 @@ const MACRONUTRIENT_DISTRIBUTIONS = {
 
 /** Calculates BMI from weight in kilograms and height in centimetres. */
 export function calculateBMI(weight: number, height: number): number {
+  positive(weight, height);
   const heightInMetres = height / 100;
 
-  return weight / heightInMetres ** 2;
+  const result = weight / heightInMetres ** 2;
+  positive(result);
+  return result;
 }
 
 /** Returns the standard BMI category for a calculated BMI value. */
-export function getBMICategory(bmi: number): string {
+export function getBMICategory(bmi: number): BMICategory {
+  positive(bmi);
   if (bmi < 18.5) {
-    return 'Underweight';
+    return "Underweight";
   }
 
   if (bmi < 25) {
-    return 'Normal weight';
+    return "Normal weight";
   }
 
   if (bmi < 30) {
-    return 'Overweight';
+    return "Overweight";
   }
 
-  return 'Obesity';
+  return "Obesity";
 }
 
 /** Calculates BMR using the Mifflin-St Jeor equation. */
@@ -52,14 +59,21 @@ export function calculateBMR(
   height: number,
   age: number,
 ): number {
+  positive(weight, height, age);
+  if (gender !== "M" && gender !== "F") throw new RangeError("Invalid sex");
   const baseBMR = 10 * weight + 6.25 * height - 5 * age;
 
-  return gender === 'M' ? baseBMR + 5 : baseBMR - 161;
+  const result = gender === "M" ? baseBMR + 5 : baseBMR - 161;
+  positive(result);
+  return result;
 }
 
 /** Calculates total daily energy expenditure from BMR and activity level. */
 export function calculateTDEE(bmr: number, activityMultiplier: number): number {
-  return bmr * activityMultiplier;
+  positive(bmr, activityMultiplier);
+  const result = bmr * activityMultiplier;
+  positive(result);
+  return result;
 }
 
 /** Calculates TDEE estimates for every standard activity level. */
@@ -78,16 +92,24 @@ export function calculateTDEEActivityTable(bmr: number): TDEEActivityTable {
  * Calculates ideal body weight in kilograms using Hamwi, Devine, Robinson,
  * and Miller formulas.
  */
-export function calculateIdealWeight(gender: Gender, height: number): IdealWeight {
+export function calculateIdealWeight(
+  gender: Gender,
+  height: number,
+): IdealWeight | null {
+  positive(height);
+  if (height < 152.4 || height > 220) return null;
   const heightInInches = height / 2.54;
-  const inchesOverFiveFeet = Math.max(0, heightInInches - 60);
-  const isMale = gender === 'M';
+  const inchesOverFiveFeet = heightInInches - 60;
+  const isMale = gender === "M";
 
   return {
-    hamwi: (isMale ? 48 : 45.5) + 2.7 * inchesOverFiveFeet,
+    hamwi:
+      ((isMale ? 106 : 100) + (isMale ? 6 : 5) * inchesOverFiveFeet) *
+      0.45359237,
     devine: (isMale ? 50 : 45.5) + 2.3 * inchesOverFiveFeet,
     robinson: (isMale ? 52 : 49) + (isMale ? 1.9 : 1.7) * inchesOverFiveFeet,
-    miller: (isMale ? 56.2 : 53.1) + (isMale ? 1.41 : 1.36) * inchesOverFiveFeet,
+    miller:
+      (isMale ? 56.2 : 53.1) + (isMale ? 1.41 : 1.36) * inchesOverFiveFeet,
   };
 }
 
@@ -100,10 +122,11 @@ function calculateMacronutrientSplit(
     protein: number;
   },
 ): MacronutrientSplit {
+  positive(calories);
   return {
-    protein: (calories * distribution.protein) / 4,
-    fat: (calories * distribution.fat) / 9,
-    carbs: (calories * distribution.carbs) / 4,
+    protein: (calories * distribution.protein) / ENERGY_PER_GRAM.protein,
+    fat: (calories * distribution.fat) / ENERGY_PER_GRAM.fat,
+    carbs: (calories * distribution.carbs) / ENERGY_PER_GRAM.carbs,
   };
 }
 
@@ -129,10 +152,20 @@ function calculateDietPlans(calories: number): MacronutrientDietPlans {
  * Calculates daily macronutrient targets for maintenance, a 500 kcal cut,
  * and a 500 kcal surplus.
  */
-export function calculateMacronutrients(tdee: number): Macronutrients {
+export function calculateMacronutrients(
+  tdee: number,
+  bmi = 22,
+): Macronutrients {
+  positive(tdee, bmi);
   return {
     maintenance: calculateDietPlans(tdee),
-    cutting: calculateDietPlans(Math.max(0, tdee - 500)),
-    bulking: calculateDietPlans(tdee + 500),
+    cutting:
+      bmi >= 18.5 && tdee - 500 >= 1500 ? calculateDietPlans(tdee - 500) : null,
+    bulking: bmi >= 18.5 ? calculateDietPlans(tdee + 500) : null,
   };
+}
+
+function positive(...values: number[]) {
+  if (values.some((value) => !Number.isFinite(value) || value <= 0))
+    throw new RangeError("Values must be finite and positive");
 }

@@ -11,3 +11,9 @@
     @apply bg-slate-50 antialiased;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

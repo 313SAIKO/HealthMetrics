@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { HealthForm } from '../components/health/HealthForm';
-import { ResultCard } from '../components/health/ResultCard';
-import { useHealthCalculator } from '../hooks/useHealthCalculator';
-import type { Language } from '../types';
-import { getTranslations } from '../utils/translations';
+import { HealthForm } from "../components/health/HealthForm";
+import { ResultCard } from "../components/health/ResultCard";
+import { useHealthCalculator } from "../hooks/useHealthCalculator";
+import type { Language } from "../types";
+import { getTranslations } from "../utils/translations";
 
 interface ResultPlaceholderProps {
   language: Language;
@@ -26,25 +26,30 @@ function ResultPlaceholder({ language }: ResultPlaceholderProps) {
       </p>
 
       <div className="mt-8 space-y-3">
-        {[t.results.bmi, t.results.bmr, t.results.tdee].map(
-          (label) => (
-            <div
-              className="flex items-center justify-between rounded-xl bg-slate-100 px-4 py-3"
-              key={label}
-            >
-              <span className="text-sm font-medium text-slate-500">{label}</span>
-              <span className="h-5 w-16 rounded bg-slate-200" />
-            </div>
-          ),
-        )}
+        {[t.results.bmi, t.results.bmr, t.results.tdee].map((label) => (
+          <div
+            className="flex items-center justify-between rounded-xl bg-slate-100 px-4 py-3"
+            key={label}
+          >
+            <span className="text-sm font-medium text-slate-500">{label}</span>
+            <span className="h-5 w-16 rounded bg-slate-200" />
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
 export default function HomePage() {
-  const { calculate, errors, language, profile, result, setLanguage, updateProfile } =
-    useHealthCalculator();
+  const {
+    calculate,
+    errors,
+    language,
+    profile,
+    result,
+    setLanguage,
+    updateProfile,
+  } = useHealthCalculator();
   const t = getTranslations(language);
 
   return (
@@ -62,30 +67,30 @@ export default function HomePage() {
             </span>
           </a>
           <div
-            aria-label="Language selector"
+            aria-label={language === "th" ? "เลือกภาษา" : "Language selector"}
             className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
             role="group"
           >
             <button
-              aria-pressed={language === 'en'}
+              aria-pressed={language === "en"}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                language === 'en'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-100'
+                language === "en"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-slate-100"
               }`}
-              onClick={() => setLanguage('en')}
+              onClick={() => setLanguage("en")}
               type="button"
             >
               {t.common.english}
             </button>
             <button
-              aria-pressed={language === 'th'}
+              aria-pressed={language === "th"}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                language === 'th'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:bg-slate-100'
+                language === "th"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-slate-100"
               }`}
-              onClick={() => setLanguage('th')}
+              onClick={() => setLanguage("th")}
               type="button"
             >
               {t.common.thai}
@@ -98,25 +103,10 @@ export default function HomePage() {
             {t.page.eyebrow}
           </p>
           <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl flex flex-col items-center">
-            {language === 'en' ? (
-              <>
-                <span>
-                  Know <span className="text-emerald-600">your numbers.</span>
-                </span>
-                <span className="mt-1 sm:mt-2">
-                  Feel <span className="text-emerald-600">your best.</span>
-                </span>
-              </>
-            ) : (
-              <>
-                <span>
-                  รู้จัก<span className="text-emerald-600">ตัวเลขของคุณ</span>
-                </span>
-                <span className="mt-1 sm:mt-2">
-                  เพื่อ<span className="text-emerald-600">สุขภาพที่ดีขึ้น</span>
-                </span>
-              </>
-            )}
+            <span>{t.page.titleStart}</span>
+            <span className="mt-2 text-emerald-600">
+              {t.page.titleHighlight}
+            </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
             {t.page.subtitle}
@@ -128,7 +118,7 @@ export default function HomePage() {
           id="calculator"
         >
           {/* Left Pane (HealthForm) */}
-          <div className="w-full lg:w-[420px] shrink-0 bg-white p-8 sm:p-10 flex flex-col justify-start">
+          <div className="w-full lg:w-[420px] shrink-0 bg-white p-5 sm:p-8 flex flex-col justify-start">
             <HealthForm
               errors={errors}
               language={language}
@@ -138,7 +128,7 @@ export default function HomePage() {
             />
           </div>
           {/* Right Pane (ResultCard / ResultPlaceholder) */}
-          <div className="flex-1 bg-slate-50 p-8 sm:p-10 border-t lg:border-t-0 lg:border-l border-slate-200/60">
+          <div className="min-w-0 flex-1 bg-slate-50 p-3 sm:p-6 border-t lg:border-t-0 lg:border-l border-slate-200/60">
             {result ? (
               <ResultCard language={language} result={result} />
             ) : (

@@ -1,8 +1,16 @@
 /** Biological sex used by the Mifflin-St Jeor BMR equation. */
-export type Gender = 'M' | 'F';
+export type Gender = "M" | "F";
 
 /** Supported application display languages. */
-export type Language = 'en' | 'th';
+export type BMICategory =
+  "Underweight" | "Normal weight" | "Overweight" | "Obesity";
+export type FormProfile = Omit<UserProfile, "age" | "weight" | "height"> & {
+  age: number | "";
+  weight: number | "";
+  height: number | "";
+};
+
+export type Language = "en" | "th";
 
 /** Input values required to calculate a user's health metrics. */
 export interface UserProfile {
@@ -50,17 +58,17 @@ export interface MacronutrientDietPlans {
 /** Macronutrient targets for maintenance, cutting, and bulking goals. */
 export interface Macronutrients {
   maintenance: MacronutrientDietPlans;
-  cutting: MacronutrientDietPlans;
-  bulking: MacronutrientDietPlans;
+  cutting: MacronutrientDietPlans | null;
+  bulking: MacronutrientDietPlans | null;
 }
 
 /** Calculated health metrics ready for presentation. */
 export interface HealthResult {
   bmi: number;
-  bmiCategory: string;
+  bmiCategory: BMICategory;
   bmr: number;
   tdee: number;
   tdeeTable: TDEEActivityTable;
-  idealWeight: IdealWeight;
+  idealWeight: IdealWeight | null;
   macronutrients: Macronutrients;
 }

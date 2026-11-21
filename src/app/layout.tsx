@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-import './globals.css';
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'HealthMetrics | BMI, BMR & TDEE Calculator',
-  description: 'Calculate your BMI, BMR, and TDEE in seconds.',
+  title: "HealthMetrics | BMI, BMR & TDEE Calculator",
+  description: "Calculate your BMI, BMR, and TDEE in seconds.",
 };
 
 interface RootLayoutProps {
@@ -13,7 +13,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
-    <html lang="en">
+    <html lang="th">
       <body>{children}</body>
     </html>
   );
