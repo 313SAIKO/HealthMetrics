@@ -80,3 +80,34 @@ describe("health estimates", () => {
     ).toBeGreaterThan(0),
   );
 });
+
+it.each([
+  ["age", 20, true],
+  ["age", 78, true],
+  ["age", 19, false],
+  ["age", 79, false],
+  ["weight", 20, true],
+  ["weight", 300, true],
+  ["weight", 19.9, false],
+  ["weight", 300.1, false],
+  ["height", 100, true],
+  ["height", 220, true],
+  ["height", 99.9, false],
+  ["height", 220.1, false],
+])("validates %s boundary %s", (field, value, accepted) => {
+  expect(
+    Object.keys(validateProfile({ ...profile, [field]: value })).length === 0,
+  ).toBe(accepted);
+});
+
+it("opens cutting exactly at the product energy and BMI boundaries", () => {
+  expect(calculateMacronutrients(1999.99, 18.5).cutting).toBeNull();
+  expect(calculateMacronutrients(2000, 18.49999).cutting).toBeNull();
+  const plan = calculateMacronutrients(2000, 18.5).cutting;
+  expect(plan).not.toBeNull();
+  expect(
+    plan!.moderateCarb.protein * 4 +
+      plan!.moderateCarb.carbs * 4 +
+      plan!.moderateCarb.fat * 9,
+  ).toBeCloseTo(1500);
+});

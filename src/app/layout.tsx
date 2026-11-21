@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HealthMetrics | BMI, BMR & TDEE Calculator",
-  description: "Calculate your BMI, BMR, and TDEE in seconds.",
+  title: "HealthMetrics | Health estimates & assessment history",
+  description:
+    "Bilingual health estimates with private assessment history and comparison.",
 };
 
 interface RootLayoutProps {

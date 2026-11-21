@@ -9,14 +9,20 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit --incremental false",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm test && npm run build && npm run verify:build",
+    "test:e2e": "playwright test",
+    "setup": "node scripts/setup.mjs && npm run db:migrate",
+    "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
+    "verify:build": "node scripts/verify-build.mjs"
   },
   "dependencies": {
+    "better-auth": "^1.7.27",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
@@ -28,10 +34,11 @@
     "postcss": "^8.5.33",
     "prettier": "^3.10.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.3",
     "vitest": "^5.1.1"
   },
   "engines": {
-    "node": ">=24 <25"
+    "node": ">=24.15.0 <25"
   }
 }

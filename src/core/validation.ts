@@ -1,24 +1,29 @@
+import { PROFILE_LIMITS } from "./policy";
 import { ACTIVITY_MULTIPLIERS } from "./calculator";
 import type { FormProfile, UserProfile } from "../types";
-export type ValidationErrors = Partial<Record<keyof UserProfile, string>>;
+export type ValidationErrorCode =
+  "age" | "weight" | "height" | "activity" | "gender";
+export type ValidationErrors = Partial<
+  Record<keyof UserProfile, ValidationErrorCode>
+>;
 export function validateProfile(profile: FormProfile): ValidationErrors {
   const errors: ValidationErrors = {};
   if (
     !Number.isInteger(profile.age) ||
-    Number(profile.age) < 20 ||
-    Number(profile.age) > 78
+    Number(profile.age) < PROFILE_LIMITS.age.min ||
+    Number(profile.age) > PROFILE_LIMITS.age.max
   )
     errors.age = "age";
   if (
     !Number.isFinite(profile.weight) ||
-    Number(profile.weight) < 20 ||
-    Number(profile.weight) > 300
+    Number(profile.weight) < PROFILE_LIMITS.weight.min ||
+    Number(profile.weight) > PROFILE_LIMITS.weight.max
   )
     errors.weight = "weight";
   if (
     !Number.isFinite(profile.height) ||
-    Number(profile.height) < 100 ||
-    Number(profile.height) > 220
+    Number(profile.height) < PROFILE_LIMITS.height.min ||
+    Number(profile.height) > PROFILE_LIMITS.height.max
   )
     errors.height = "height";
   if (
@@ -31,19 +36,3 @@ export function validateProfile(profile: FormProfile): ValidationErrors {
     errors.gender = "gender";
   return errors;
 }
-export const validationMessages = {
-  th: {
-    age: "รองรับอายุจำนวนเต็ม 20–78 ปี",
-    weight: "กรอกน้ำหนัก 20–300 กก.",
-    height: "กรอกส่วนสูง 100–220 ซม.",
-    activity: "เลือกระดับกิจกรรมจากรายการ",
-    gender: "เลือกเพศที่ใช้ในสมการ",
-  },
-  en: {
-    age: "Enter a whole age from 20 to 78 years.",
-    weight: "Enter a weight from 20 to 300 kg.",
-    height: "Enter a height from 100 to 220 cm.",
-    activity: "Choose an activity from the list.",
-    gender: "Choose the sex used by the equation.",
-  },
-};

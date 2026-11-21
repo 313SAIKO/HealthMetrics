@@ -2,15 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 
-import {
-  calculateBMI,
-  calculateBMR,
-  calculateIdealWeight,
-  calculateMacronutrients,
-  calculateTDEE,
-  calculateTDEEActivityTable,
-  getBMICategory,
-} from "../core/calculator";
+import { calculateHealthResult } from "../core/assessment";
 import type {
   HealthResult,
   Language,
@@ -29,11 +21,11 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 /** Bridges health-calculator form state with the pure calculation layer. */
-export function useHealthCalculator() {
+export function useHealthCalculator(initialLanguage: Language = "th") {
   const [profile, setProfile] = useState<FormProfile>(DEFAULT_PROFILE);
   const [result, setResult] = useState<HealthResult | null>(null);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [language, setLanguage] = useState<Language>("th");
+  const [language, setLanguage] = useState<Language>(initialLanguage);
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
@@ -68,25 +60,15 @@ export function useHealthCalculator() {
       return false;
     }
 
-    const bmr = calculateBMR(
-      profile.gender,
-      Number(profile.weight),
-      Number(profile.height),
-      Number(profile.age),
-    );
-    const bmi = calculateBMI(Number(profile.weight), Number(profile.height));
-    const tdee = calculateTDEE(bmr, profile.activityMultiplier);
-
     setErrors({});
-    setResult({
-      bmi,
-      bmiCategory: getBMICategory(bmi),
-      bmr,
-      tdee,
-      tdeeTable: calculateTDEEActivityTable(bmr),
-      idealWeight: calculateIdealWeight(profile.gender, Number(profile.height)),
-      macronutrients: calculateMacronutrients(tdee, bmi),
-    });
+    setResult(
+      calculateHealthResult({
+        ...profile,
+        age: Number(profile.age),
+        weight: Number(profile.weight),
+        height: Number(profile.height),
+      }),
+    );
 
     return true;
   }, [profile]);

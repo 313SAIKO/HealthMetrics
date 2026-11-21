@@ -32,3 +32,13 @@ next-env.d.ts
 .env*
 !.env.example
 next-dev*.log
+
+# Browser test artifacts
+/playwright-report/
+/test-results/
+
+# Private database and local database backups
+/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

@@ -1,5 +1,6 @@
 "use client";
 
+import { BMI_BOUNDARIES } from "../../core/policy";
 import { useState } from "react";
 import { ENERGY_PER_GRAM } from "../../core/calculator";
 
@@ -51,6 +52,17 @@ function formatNumber(value: number, language: Language): string {
     maximumFractionDigits: 2,
     minimumFractionDigits: 1,
   }).format(value);
+}
+
+function formatBMI(value: number, language: Language): string {
+  // Never display a rounded value on the other side of a category boundary.
+  const rounded = Math.round(value * 100) / 100;
+  const boundary = BMI_BOUNDARIES.find(
+    (limit) => value < limit && rounded >= limit,
+  );
+  return boundary === undefined
+    ? formatNumber(value, language)
+    : `< ${formatNumber(boundary, language)}`;
 }
 
 function getBMICategoryClassName(category: BMICategory): string {
@@ -122,10 +134,10 @@ function MacroStat({
 }: MacroStatProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col items-start gap-2">
         <div className="flex min-w-0 items-center gap-3">
           <span className={`size-3 shrink-0 rounded-full ${accentClassName}`} />
-          <span className="truncate text-base font-bold text-slate-700">
+          <span className="break-words text-base font-bold text-slate-700">
             {label}
           </span>
         </div>
@@ -186,35 +198,35 @@ export function ResultCard({ language, result }: ResultCardProps) {
           </span>
         </div>
 
-        <div className="mt-7 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-emerald-500 p-5 text-emerald-950">
+        <div className="mt-7 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))]">
+          <div className="min-w-0 rounded-2xl bg-emerald-500 p-5 text-emerald-950">
             <p className="text-xs font-bold uppercase tracking-wider text-emerald-950/70">
               {t.results.tdee}
             </p>
-            <p className="mt-2 text-3xl font-black tracking-tight">
+            <p className="mt-2 text-3xl font-black tracking-tight break-words">
               {formatNumber(result.tdee, language)}
             </p>
             <p className="mt-1 text-xs font-semibold text-emerald-950/75">
               {t.common.kcalPerDay}
             </p>
           </div>
-          <div className="rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
+          <div className="min-w-0 rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
               {t.results.bmr}
             </p>
-            <p className="mt-2 text-3xl font-black tracking-tight">
+            <p className="mt-2 text-3xl font-black tracking-tight break-words">
               {formatNumber(result.bmr, language)}
             </p>
             <p className="mt-1 text-xs font-medium text-slate-400">
               {t.common.kcalPerDay}
             </p>
           </div>
-          <div className="rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
+          <div className="min-w-0 rounded-2xl bg-white/10 p-5 ring-1 ring-white/10">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
               {t.results.bmi}
             </p>
-            <p className="mt-2 text-3xl font-black tracking-tight">
-              {formatNumber(result.bmi, language)}
+            <p className="mt-2 text-3xl font-black tracking-tight break-words">
+              {formatBMI(result.bmi, language)}
             </p>
             <p className="mt-1 text-xs font-medium text-slate-400">
               {getBMICategoryLabel(result.bmiCategory, t)}
@@ -224,11 +236,11 @@ export function ResultCard({ language, result }: ResultCardProps) {
 
         <div className="mt-6 border-t border-white/10 pt-6">
           <h3 className="text-base font-bold">{t.results.formulaTitle}</h3>
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+          <div className="mt-4 grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]">
             <div className="rounded-xl bg-white/5 p-3">
               <p className="text-xs font-bold text-emerald-300">BMI</p>
               <p className="mt-1 text-xs leading-5 text-slate-300">
-                {t.education.bmi}
+                {t.education.bmi} {t.results.bmiRoundingNote}
               </p>
             </div>
             <div className="rounded-xl bg-white/5 p-3">
@@ -248,7 +260,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
       </div>
 
       <div className="flex flex-col gap-10">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 sm:p-8">
+        <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/60 sm:p-8">
           <div>
             <p className="text-sm font-bold text-slate-900">
               {t.results.activityTableTitle}
@@ -291,7 +303,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 sm:p-8">
+        <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/60 sm:p-8">
           <h3 className="text-lg font-bold tracking-tight text-slate-900">
             {t.results.idealWeightTitle}
           </h3>
@@ -301,7 +313,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
           <p className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
             {t.education.idealWeight}
           </p>
-          <div className="mt-5 grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]">
             {IDEAL_WEIGHT_FORMULAS.map((formula) => (
               <MetricExplanation
                 description={t.education[formula]}
@@ -331,9 +343,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
                     <td className="px-4 py-4 sm:px-6 sm:py-5 text-right font-bold text-slate-950">
                       {result.idealWeight
                         ? formatNumber(result.idealWeight[formula], language)
-                        : language === "th"
-                          ? "ไม่รองรับส่วนสูงนี้"
-                          : "Height outside supported range"}
+                        : t.results.unsupportedHeight}
                       {result.idealWeight ? " kg" : ""}
                     </td>
                   </tr>
@@ -343,7 +353,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-md shadow-slate-200/60 sm:p-8">
+        <section className="min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/60 sm:p-8">
           <h3 className="text-lg font-bold tracking-tight text-slate-900">
             {t.results.macrosTitle}
           </h3>
@@ -382,11 +392,7 @@ export function ResultCard({ language, result }: ResultCardProps) {
 
           <div className="mt-8 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-4">
             {!selectedMacroPlan && (
-              <p role="status">
-                {language === "th"
-                  ? "ไม่แสดงแผนนี้เมื่อ BMI ต่ำกว่า 18.5 หรือเป้าหมายลดน้ำหนักต่ำกว่า 1,500 kcal/วัน โปรดปรึกษาผู้เชี่ยวชาญ"
-                  : "This plan is withheld for BMI below 18.5 or cutting targets below 1,500 kcal/day. Consult a qualified professional."}
-              </p>
+              <p role="status">{t.results.withheldPlan}</p>
             )}
             {selectedMacroPlan &&
               MACRO_DIETS.map((diet) => {

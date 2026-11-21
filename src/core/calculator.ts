@@ -1,3 +1,4 @@
+import { BMI_BOUNDARIES, IDEAL_WEIGHT_HEIGHT, ENERGY_POLICY } from "./policy";
 import type {
   Gender,
   BMICategory,
@@ -37,15 +38,15 @@ export function calculateBMI(weight: number, height: number): number {
 /** Returns the standard BMI category for a calculated BMI value. */
 export function getBMICategory(bmi: number): BMICategory {
   positive(bmi);
-  if (bmi < 18.5) {
+  if (bmi < BMI_BOUNDARIES[0]) {
     return "Underweight";
   }
 
-  if (bmi < 25) {
+  if (bmi < BMI_BOUNDARIES[1]) {
     return "Normal weight";
   }
 
-  if (bmi < 30) {
+  if (bmi < BMI_BOUNDARIES[2]) {
     return "Overweight";
   }
 
@@ -97,7 +98,8 @@ export function calculateIdealWeight(
   height: number,
 ): IdealWeight | null {
   positive(height);
-  if (height < 152.4 || height > 220) return null;
+  if (height < IDEAL_WEIGHT_HEIGHT.min || height > IDEAL_WEIGHT_HEIGHT.max)
+    return null;
   const heightInInches = height / 2.54;
   const inchesOverFiveFeet = heightInInches - 60;
   const isMale = gender === "M";
@@ -160,8 +162,14 @@ export function calculateMacronutrients(
   return {
     maintenance: calculateDietPlans(tdee),
     cutting:
-      bmi >= 18.5 && tdee - 500 >= 1500 ? calculateDietPlans(tdee - 500) : null,
-    bulking: bmi >= 18.5 ? calculateDietPlans(tdee + 500) : null,
+      bmi >= BMI_BOUNDARIES[0] &&
+      tdee - ENERGY_POLICY.adjustment >= ENERGY_POLICY.minimumCutting
+        ? calculateDietPlans(tdee - ENERGY_POLICY.adjustment)
+        : null,
+    bulking:
+      bmi >= BMI_BOUNDARIES[0]
+        ? calculateDietPlans(tdee + ENERGY_POLICY.adjustment)
+        : null,
   };
 }
 

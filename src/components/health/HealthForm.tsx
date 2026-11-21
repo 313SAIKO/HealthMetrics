@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, type FormEvent } from "react";
 import { ACTIVITY_MULTIPLIERS } from "../../core/calculator";
-import { validationMessages } from "../../core/validation";
+import type {
+  ValidationErrors,
+  ValidationErrorCode,
+} from "../../core/validation";
+import { PROFILE_LIMITS } from "../../core/policy";
 
 import type { Language, UserProfile, FormProfile } from "../../types";
 import { getTranslations } from "../../utils/translations";
-
-type ValidationErrors = Partial<Record<keyof UserProfile, string>>;
 
 interface HealthFormProps {
   errors: ValidationErrors;
@@ -32,14 +34,16 @@ export function HealthForm({
 }: HealthFormProps) {
   const t = getTranslations(language);
   const formRef = useRef<HTMLFormElement>(null);
+  const focusAfterSubmit = useRef(false);
   useEffect(() => {
+    if (!focusAfterSubmit.current) return;
+    focusAfterSubmit.current = false;
     if (Object.keys(errors).length)
       formRef.current
         ?.querySelector<HTMLElement>('[aria-invalid="true"]')
         ?.focus();
   }, [errors]);
-  const message = (code: string) =>
-    validationMessages[language][code as keyof typeof validationMessages.en];
+  const message = (code: ValidationErrorCode) => t.validation[code];
   const activityLevels = [
     { label: t.activity.sedentary, value: ACTIVITY_MULTIPLIERS.sedentary },
     { label: t.activity.light, value: ACTIVITY_MULTIPLIERS.light },
@@ -54,6 +58,7 @@ export function HealthForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    focusAfterSubmit.current = true;
     onCalculate();
   };
 
@@ -109,7 +114,7 @@ export function HealthForm({
             {t.form.age}
           </label>
           <input
-            aria-describedby={errors.age ? "age-error" : undefined}
+            aria-describedby={errors.age ? "age-hint age-error" : "age-hint"}
             aria-invalid={Boolean(errors.age)}
             className={`${inputClassName} ${
               errors.age
@@ -117,9 +122,9 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="age"
-            min="20"
-            max="78"
-            step="1"
+            min={PROFILE_LIMITS.age.min}
+            max={PROFILE_LIMITS.age.max}
+            step={PROFILE_LIMITS.age.step}
             onChange={(event) =>
               onProfileChange(
                 "age",
@@ -129,6 +134,9 @@ export function HealthForm({
             type="number"
             value={profile.age}
           />
+          <p id="age-hint" className="mt-2 text-xs text-slate-600">
+            {t.form.ageHint}
+          </p>
           {errors.age && (
             <p
               className="mt-2 text-xs font-medium text-rose-600"
@@ -148,7 +156,9 @@ export function HealthForm({
             <span className="font-normal text-slate-400">(kg)</span>
           </label>
           <input
-            aria-describedby={errors.weight ? "weight-error" : undefined}
+            aria-describedby={
+              errors.weight ? "weight-hint weight-error" : "weight-hint"
+            }
             aria-invalid={Boolean(errors.weight)}
             className={`${inputClassName} ${
               errors.weight
@@ -156,17 +166,21 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="weight"
-            min="0.1"
+            min={PROFILE_LIMITS.weight.min}
+            max={PROFILE_LIMITS.weight.max}
             onChange={(event) =>
               onProfileChange(
                 "weight",
                 event.target.value === "" ? "" : Number(event.target.value),
               )
             }
-            step="0.1"
+            step={PROFILE_LIMITS.weight.step}
             type="number"
             value={profile.weight}
           />
+          <p id="weight-hint" className="mt-2 text-xs text-slate-600">
+            {t.form.weightHint}
+          </p>
           {errors.weight && (
             <p
               className="mt-2 text-xs font-medium text-rose-600"
@@ -186,7 +200,9 @@ export function HealthForm({
             <span className="font-normal text-slate-400">(cm)</span>
           </label>
           <input
-            aria-describedby={errors.height ? "height-error" : undefined}
+            aria-describedby={
+              errors.height ? "height-hint height-error" : "height-hint"
+            }
             aria-invalid={Boolean(errors.height)}
             className={`${inputClassName} ${
               errors.height
@@ -194,17 +210,21 @@ export function HealthForm({
                 : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
             }`}
             id="height"
-            min="0.1"
+            min={PROFILE_LIMITS.height.min}
+            max={PROFILE_LIMITS.height.max}
             onChange={(event) =>
               onProfileChange(
                 "height",
                 event.target.value === "" ? "" : Number(event.target.value),
               )
             }
-            step="0.1"
+            step={PROFILE_LIMITS.height.step}
             type="number"
             value={profile.height}
           />
+          <p id="height-hint" className="mt-2 text-xs text-slate-600">
+            {t.form.heightHint}
+          </p>
           {errors.height && (
             <p
               className="mt-2 text-xs font-medium text-rose-600"
@@ -256,9 +276,7 @@ export function HealthForm({
       </div>
 
       <p className="mt-6 text-sm leading-6 text-slate-600">
-        {language === "th"
-          ? "สำหรับผู้ใหญ่อายุ 20–78 ปีที่ไม่ได้ตั้งครรภ์หรือให้นม ใช้เกณฑ์ BMI ผู้ใหญ่สากล ผลเป็นค่าประมาณ ไม่ใช่แผนโภชนาการเฉพาะบุคคล"
-          : "For adults aged 20–78 who are not pregnant or breastfeeding. Uses international adult BMI categories. Estimates are not personalized nutrition prescriptions."}
+        {t.form.eligibility}
       </p>
       <button
         className="mt-8 w-full rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 active:scale-[0.99]"

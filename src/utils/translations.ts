@@ -1,6 +1,14 @@
+import {
+  PROFILE_LIMITS,
+  BMI_BOUNDARIES,
+  IDEAL_WEIGHT_HEIGHT,
+  ENERGY_POLICY,
+} from "../core/policy";
+import type { ValidationErrorCode } from "../core/validation";
 import type { Language } from "../types";
 
 export interface TranslationDictionary {
+  validation: Record<ValidationErrorCode, string>;
   common: {
     english: string;
     thai: string;
@@ -21,6 +29,10 @@ export interface TranslationDictionary {
     eyebrow: string;
     title: string;
     description: string;
+    eligibility: string;
+    ageHint: string;
+    weightHint: string;
+    heightHint: string;
     gender: string;
     male: string;
     female: string;
@@ -42,6 +54,9 @@ export interface TranslationDictionary {
     eyebrow: string;
     title: string;
     bmi: string;
+    bmiRoundingNote: string;
+    unsupportedHeight: string;
+    withheldPlan: string;
     bmr: string;
     tdee: string;
     atRest: string;
@@ -90,6 +105,13 @@ export interface TranslationDictionary {
 
 export const translations: Record<Language, TranslationDictionary> = {
   en: {
+    validation: {
+      age: `Enter a whole age from ${PROFILE_LIMITS.age.min} to ${PROFILE_LIMITS.age.max} years.`,
+      weight: `Enter a weight from ${PROFILE_LIMITS.weight.min} to ${PROFILE_LIMITS.weight.max} kg.`,
+      height: `Enter a height from ${PROFILE_LIMITS.height.min} to ${PROFILE_LIMITS.height.max} cm.`,
+      activity: "Choose an activity from the list.",
+      gender: "Choose the sex used by the equation.",
+    },
     common: {
       english: "EN",
       thai: "TH",
@@ -98,11 +120,11 @@ export const translations: Record<Language, TranslationDictionary> = {
     },
     page: {
       brandTagline: "Built for better habits",
-      eyebrow: "Personal health calculator",
+      eyebrow: "Your health estimates and history",
       titleStart: "Know your numbers.",
       titleHighlight: "Feel your best.",
       subtitle:
-        "Get a clear estimate of your BMI, BMR, and TDEE in seconds—so you can make more informed choices for your health goals.",
+        "Calculate your BMI, BMR, and TDEE, then sign in to save your assessments and compare your recorded measurements.",
       footer:
         "Calculations are estimates based on the Mifflin-St Jeor equation and standard activity multipliers.",
       resultPlaceholderTitle: "Your results will appear here",
@@ -110,6 +132,10 @@ export const translations: Record<Language, TranslationDictionary> = {
         "Complete the form to get an estimate of your BMI, resting calorie burn, and daily maintenance calories.",
     },
     form: {
+      eligibility: `For adults aged ${PROFILE_LIMITS.age.min}–${PROFILE_LIMITS.age.max} who are not pregnant or breastfeeding. Uses international adult BMI categories. Estimates are not personalized nutrition prescriptions.`,
+      ageHint: `Whole years: ${PROFILE_LIMITS.age.min}–${PROFILE_LIMITS.age.max}`,
+      weightHint: `${PROFILE_LIMITS.weight.min}–${PROFILE_LIMITS.weight.max} kg`,
+      heightHint: `${PROFILE_LIMITS.height.min}–${PROFILE_LIMITS.height.max} cm`,
       eyebrow: "Your details",
       title: "Let’s calculate your health metrics",
       description:
@@ -132,6 +158,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       athlete: "Extra active — intense exercise or physical job",
     },
     results: {
+      bmiRoundingNote:
+        "Categories and plan availability use BMI before rounding. A < sign means the actual value is just below the displayed boundary.",
+      unsupportedHeight: "Height outside supported range",
+      withheldPlan: `This plan is withheld for BMI below ${BMI_BOUNDARIES[0]} or cutting targets below ${ENERGY_POLICY.minimumCutting.toLocaleString("en-US")} kcal/day. Consult a qualified professional.`,
       eyebrow: "Your results",
       title: "A snapshot of your daily needs",
       bmi: "Body Mass Index (BMI)",
@@ -150,7 +180,7 @@ export const translations: Record<Language, TranslationDictionary> = {
         "Four clinical formulas provide useful reference estimates based on your height.",
       formula: "Formula",
       estimatedWeight: "Estimated weight",
-      macrosTitle: "Daily macronutrient targets",
+      macrosTitle: "Illustrative macronutrient splits",
       macrosDescription:
         "Illustrative calorie splits only, not a nutrition prescription. A displayed plan is not necessarily suitable for you.",
       maintenance: "Maintenance",
@@ -175,8 +205,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       tdee: "TDEE estimates your daily calorie use. Formula: BMR × activity multiplier.",
       idealWeight:
         "Ideal weight is a height-based reference, not a diagnosis or a universal goal. Results vary because each formula uses a different reference population.",
-      hamwi:
-        "Hamwi: 106 lb + 6 lb/in (male), or 100 lb + 5 lb/in (female), above 5 feet; converted to kg. Supported heights: 152.4–220 cm.",
+      hamwi: `Hamwi: 106 lb + 6 lb/in (male), or 100 lb + 5 lb/in (female), above 5 feet; converted to kg. Supported heights: ${IDEAL_WEIGHT_HEIGHT.min}–${IDEAL_WEIGHT_HEIGHT.max} cm.`,
       devine:
         "Devine: 50 kg (male) or 45.5 kg (female), plus 2.3 kg for every inch over 5 feet.",
       robinson:
@@ -187,13 +216,18 @@ export const translations: Record<Language, TranslationDictionary> = {
         "Macronutrient targets divide your daily calories between protein, fat, and carbohydrates. Protein and carbs provide 4 kcal per gram; fat provides 9 kcal per gram.",
       maintenance:
         "Maintenance uses your estimated TDEE to help maintain your current weight.",
-      cutting:
-        "Cutting uses TDEE minus 500 kcal per day, a commonly used starting deficit for fat loss.",
-      bulking:
-        "Bulking uses TDEE plus 500 kcal per day, a commonly used starting surplus for weight gain.",
+      cutting: `Cutting illustrates TDEE minus ${ENERGY_POLICY.adjustment} kcal per day, subject to the product limits.`,
+      bulking: `Bulking illustrates TDEE plus ${ENERGY_POLICY.adjustment} kcal per day, subject to the product limits.`,
     },
   },
   th: {
+    validation: {
+      age: `รองรับอายุจำนวนเต็ม ${PROFILE_LIMITS.age.min}–${PROFILE_LIMITS.age.max} ปี`,
+      weight: `กรอกน้ำหนัก ${PROFILE_LIMITS.weight.min}–${PROFILE_LIMITS.weight.max} กก.`,
+      height: `กรอกส่วนสูง ${PROFILE_LIMITS.height.min}–${PROFILE_LIMITS.height.max} ซม.`,
+      activity: "เลือกระดับกิจกรรมจากรายการ",
+      gender: "เลือกเพศที่ใช้ในสมการ",
+    },
     common: {
       english: "EN",
       thai: "TH",
@@ -202,11 +236,11 @@ export const translations: Record<Language, TranslationDictionary> = {
     },
     page: {
       brandTagline: "เพื่อสุขภาพที่ดีขึ้นทุกวัน",
-      eyebrow: "เครื่องคำนวณสุขภาพส่วนบุคคล",
+      eyebrow: "คำนวณและบันทึกข้อมูลสุขภาพส่วนบุคคล",
       titleStart: "รู้จักตัวเลขของคุณ",
       titleHighlight: "เพื่อสุขภาพที่ดีขึ้น",
       subtitle:
-        "ดูค่าประมาณ BMI, BMR และ TDEE ได้ในไม่กี่วินาที เพื่อช่วยให้คุณวางแผนดูแลสุขภาพได้อย่างมั่นใจยิ่งขึ้น",
+        "คำนวณค่าประมาณ BMI, BMR และ TDEE พร้อมบันทึกประวัติในบัญชีส่วนตัว และเปรียบเทียบข้อมูลที่วัดไว้แต่ละครั้ง",
       footer:
         "ผลการคำนวณเป็นเพียงค่าประมาณ โดยอ้างอิงสมการ Mifflin-St Jeor และตัวคูณระดับกิจกรรมมาตรฐาน",
       resultPlaceholderTitle: "ผลลัพธ์ของคุณจะแสดงที่นี่",
@@ -214,6 +248,10 @@ export const translations: Record<Language, TranslationDictionary> = {
         "กรอกข้อมูลให้ครบเพื่อดูค่าประมาณ BMI พลังงานที่ร่างกายใช้ขณะพัก และพลังงานที่ควรได้รับต่อวันเพื่อรักษาน้ำหนัก",
     },
     form: {
+      eligibility: `สำหรับผู้ใหญ่อายุ ${PROFILE_LIMITS.age.min}–${PROFILE_LIMITS.age.max} ปีที่ไม่ได้ตั้งครรภ์หรือให้นม ใช้เกณฑ์ BMI ผู้ใหญ่สากล ผลเป็นค่าประมาณ ไม่ใช่แผนโภชนาการเฉพาะบุคคล`,
+      ageHint: `อายุจำนวนเต็ม ${PROFILE_LIMITS.age.min}–${PROFILE_LIMITS.age.max} ปี`,
+      weightHint: `${PROFILE_LIMITS.weight.min}–${PROFILE_LIMITS.weight.max} กก.`,
+      heightHint: `${PROFILE_LIMITS.height.min}–${PROFILE_LIMITS.height.max} ซม.`,
       eyebrow: "ข้อมูลของคุณ",
       title: "มาคำนวณข้อมูลสุขภาพของคุณกัน",
       description:
@@ -236,6 +274,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       athlete: "ออกกำลังกายหนักมาก หรือทำงานที่ใช้แรงกาย",
     },
     results: {
+      bmiRoundingNote:
+        "จัดกลุ่มและกำหนดการแสดงแผนจาก BMI ก่อนปัดเศษ เครื่องหมาย < หมายถึงค่าจริงต่ำกว่าเส้นแบ่งที่แสดงเล็กน้อย",
+      unsupportedHeight: "ไม่รองรับส่วนสูงนี้",
+      withheldPlan: `ไม่แสดงแผนนี้เมื่อ BMI ต่ำกว่า ${BMI_BOUNDARIES[0]} หรือเป้าหมายลดน้ำหนักต่ำกว่า ${ENERGY_POLICY.minimumCutting.toLocaleString("en-US")} kcal/วัน โปรดปรึกษาผู้เชี่ยวชาญ`,
       eyebrow: "ผลลัพธ์ของคุณ",
       title: "สรุปความต้องการพลังงานในแต่ละวัน",
       bmi: "ดัชนีมวลกาย (BMI)",
@@ -252,7 +294,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       idealWeightDescription: "สูตรทางคลินิก 4 สูตรช่วยให้ค่าประมาณอ้างอิงจากส่วนสูงของคุณ",
       formula: "สูตร",
       estimatedWeight: "น้ำหนักโดยประมาณ",
-      macrosTitle: "เป้าหมายสารอาหารต่อวัน",
+      macrosTitle: "ตัวอย่างการแบ่งพลังงานเป็นสารอาหาร",
       macrosDescription:
         "ตัวอย่างการแบ่งพลังงาน ไม่ใช่แผนโภชนาการเฉพาะบุคคล การแสดงแผนไม่ได้ยืนยันว่าเหมาะสมกับคุณ",
       maintenance: "รักษาน้ำหนัก",
@@ -277,8 +319,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       tdee: "TDEE คือค่าประมาณพลังงานที่ร่างกายใช้ต่อวัน สูตรคือ BMR × ตัวคูณระดับกิจกรรม",
       idealWeight:
         "น้ำหนักอ้างอิงที่เหมาะสมคำนวณจากส่วนสูง ไม่ใช่การวินิจฉัยหรือเป้าหมายตายตัว โดยแต่ละสูตรอ้างอิงจากกลุ่มประชากรที่ต่างกัน",
-      hamwi:
-        "Hamwi: ชาย 106 ปอนด์ + 6 ปอนด์/นิ้ว หญิง 100 ปอนด์ + 5 ปอนด์/นิ้ว ที่เกิน 5 ฟุต แล้วแปลงเป็นกิโลกรัม รองรับส่วนสูง 152.4–220 ซม.",
+      hamwi: `Hamwi: ชาย 106 ปอนด์ + 6 ปอนด์/นิ้ว หญิง 100 ปอนด์ + 5 ปอนด์/นิ้ว ที่เกิน 5 ฟุต แล้วแปลงเป็นกิโลกรัม รองรับส่วนสูง ${IDEAL_WEIGHT_HEIGHT.min}–${IDEAL_WEIGHT_HEIGHT.max} ซม.`,
       devine:
         "Devine: 50 กก. สำหรับชาย หรือ 45.5 กก. สำหรับหญิง แล้วบวก 2.3 กก. ต่อทุก 1 นิ้วที่สูงเกิน 5 ฟุต",
       robinson:
@@ -288,10 +329,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       macros:
         "เป้าหมายสารอาหารจะแบ่งพลังงานต่อวันเป็นโปรตีน ไขมัน และคาร์โบไฮเดรต โปรตีนและคาร์โบไฮเดรตให้พลังงาน 4 กิโลแคลอรีต่อกรัม ส่วนไขมันให้พลังงาน 9 กิโลแคลอรีต่อกรัม",
       maintenance: "การรักษาน้ำหนักใช้ค่า TDEE โดยประมาณ เพื่อช่วยคงน้ำหนักปัจจุบัน",
-      cutting:
-        "การลดน้ำหนักใช้ค่า TDEE ลบ 500 กิโลแคลอรีต่อวัน ซึ่งเป็นจุดเริ่มต้นที่นิยมใช้สำหรับการลดไขมัน",
-      bulking:
-        "การเพิ่มน้ำหนักใช้ค่า TDEE บวก 500 กิโลแคลอรีต่อวัน ซึ่งเป็นจุดเริ่มต้นที่นิยมใช้สำหรับการเพิ่มน้ำหนัก",
+      cutting: `ตัวอย่างการลดน้ำหนักใช้ค่า TDEE ลบ ${ENERGY_POLICY.adjustment} กิโลแคลอรีต่อวัน ภายใต้ข้อจำกัดของเครื่องมือ`,
+      bulking: `ตัวอย่างการเพิ่มน้ำหนักใช้ค่า TDEE บวก ${ENERGY_POLICY.adjustment} กิโลแคลอรีต่อวัน ภายใต้ข้อจำกัดของเครื่องมือ`,
     },
   },
 };
