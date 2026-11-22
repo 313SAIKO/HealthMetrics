@@ -23,3 +23,7 @@ Surfaces use a single border and 12–16px radius. Controls use 8px radius and 4
 ## Verification
 
 Check both languages at 320, 375, 1024 and 1280px, long record titles, loading/empty/error states, keyboard account disclosure, form correction, data saving and mobile comparison. Tests retain isolated fictional accounts and measurement fixtures. Review screenshots of the actual pages; a detector is supporting evidence rather than proof of visual quality.
+
+## Public demonstration
+
+The demo inherits the calculator/history visual system. A persistent fictional-data banner and reset action distinguish sample interactions from account-backed records. Open on history with two selected examples so a portfolio reviewer can see comparison immediately. Calculator and sample history switch within the demo. Changes are local to the open page and reload restores the samples. The standalone deployment links to source instead of presenting account controls that have no backend.

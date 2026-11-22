@@ -14,7 +14,10 @@
     "setup": "node scripts/setup.mjs && npm run db:migrate",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
     "verify:build": "node scripts/verify-build.mjs",
-    "verify:skills": "node scripts/verify-skills.mjs"
+    "verify:skills": "node scripts/verify-skills.mjs",
+    "build:demo": "node scripts/build-demo.mjs",
+    "preview:demo": "node scripts/serve-demo.mjs",
+    "test:demo": "playwright test --config=playwright.demo.config.ts"
   },
   "dependencies": {
     "better-auth": "^1.7.27",
@@ -29,6 +32,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
+    "esbuild": "^0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "^16.4.6",
     "jsdom": "^31.0.1",

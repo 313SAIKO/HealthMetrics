@@ -45,3 +45,8 @@ next-dev*.log
 
 # Local design-tool cache
 .impeccable/
+
+# Generated public demo and Sites checkout
+/dist/
+/.site-publish/
+.demo-build-meta.json

@@ -1,5 +1,9 @@
 # HealthMetrics
 
+[Live portfolio demo](https://healthmetrics-demo-313saiko.fitbroth256.chatgpt.site) · [English demo](https://healthmetrics-demo-313saiko.fitbroth256.chatgpt.site?lang=en)
+
+Open the sample history and comparison immediately, without an account. All demo measurements are fictional; edits stay in the open page and Reset or reload restores the examples. The public demo is a browser-only distribution; the full application below also provides authenticated, SQL-backed history.
+
 A Thai/English full-stack health assessment application built with Next.js, TypeScript, Better Auth and SQLite. Calculate adult health estimates without an account, then explicitly save measurements to a private account and compare saved snapshots.
 
 ## Quick start
@@ -42,6 +46,8 @@ Use the exact hostname configured in `BETTER_AUTH_URL`. If you change the port o
 npm run check
 npx playwright install chromium
 npm run test:e2e
+npm run build:demo
+npm run test:demo
 npm audit
 ```
 
@@ -81,9 +87,11 @@ docker build -t healthmetrics .
 docker run --env-file .env.local -e BETTER_AUTH_URL=https://your-domain.example -e DATABASE_PATH=/app/data/healthmetrics.sqlite -p 3000:3000 -v healthmetrics-data:/app/data healthmetrics
 ```
 
-The container runs as the unprivileged Node user. Put a TLS reverse proxy in front of it. Configure that proxy to sanitize and set `X-Forwarded-For`; do not accept arbitrary client-supplied forwarding headers, because authentication rate limits use the client IP. Keep the auth secret and database volume across releases. This repository does not provision a cloud host or public domain.
+The container runs as the unprivileged Node user. Put a TLS reverse proxy in front of it. Configure that proxy to sanitize and set `X-Forwarded-For`; do not accept arbitrary client-supplied forwarding headers, because authentication rate limits use the client IP. Keep the auth secret and database volume across releases. The public static demo is hosted separately; deploying the account-backed application still requires a Node host with persistent storage.
 
 ## Portfolio walkthrough
+
+Visitors can start at the [public demo](https://healthmetrics-demo-313saiko.fitbroth256.chatgpt.site) to explore fictional records without registering. See [demo architecture, build and publishing](docs/demo.md) for the artifact boundary and repeatable checks.
 
 1. Create an account, calculate a profile and save it with a measurement date.
 2. Save a second assessment with different input, then reload the history page.

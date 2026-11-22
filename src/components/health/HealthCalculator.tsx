@@ -117,6 +117,11 @@ export default function HealthCalculator({
               {copy.calculator}
             </Link>
             <Link href={`/history?lang=${language}`}>{copy.history}</Link>
+            <Link href={`/demo?lang=${language}`}>
+              {language === "th"
+                ? "ลองเดโมไม่ต้องสมัคร"
+                : "Try without signing up"}
+            </Link>
           </nav>
           <div
             className="hm-lang"

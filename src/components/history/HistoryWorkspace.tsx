@@ -61,6 +61,11 @@ export function HistoryWorkspace({
             <Link href={"/history?lang=" + language} aria-current="page">
               {language === "th" ? "ประวัติ" : "History"}
             </Link>
+            <Link href={"/demo?lang=" + language}>
+              {language === "th"
+                ? "ลองเดโมไม่ต้องสมัคร"
+                : "Try without signing up"}
+            </Link>
           </nav>
           <div
             role="group"
